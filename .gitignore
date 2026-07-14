@@ -1,0 +1,42 @@
+# ─── Java build output ───────────────────────────────────────────────
+*.class
+bin/
+build/
+out/
+target/
+dist/
+
+# ─── Eclipse (user-specific; keep .project / .classpath so the project imports) ───
+.metadata/
+.recommenders/
+.settings/
+*.launch
+tmp/
+
+# ─── IntelliJ / NetBeans / VS Code (in case a contributor uses them) ─
+.idea/
+*.iml
+nbproject/private/
+.vscode/
+
+# ─── Secrets & local config (commit a *.example template instead) ────
+db.properties
+*.local.properties
+application-local.properties
+secrets.properties
+*.env
+.env
+
+# ─── Logs & temp files ──────────────────────────────────────────────
+*.log
+*.tmp
+*.bak
+*~
+
+# ─── OS cruft ───────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ─── Tooling: keep project governance (.specify) but drop local settings ─
+.claude/settings.local.json
