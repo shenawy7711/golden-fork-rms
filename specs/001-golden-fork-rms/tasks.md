@@ -25,10 +25,10 @@ US2 (auth) and US3 (menu/tables).
 
 **Purpose**: Maven project, toolchain, and shared resources.
 
-- [ ] T001 Create the **Maven** project and prefix-free source layout per plan.md: `pom.xml` at the repo root, `src/` with packages `app`, `controller`, `view`, `service`, `service/exception`, `service/security`, `dao`, `domain`, `domain/enums`, `util`, `config`; plus `db/` and `test/`. Configure `sourceDirectory=src` and `testSourceDirectory=test` so the prefix-free layout is preserved (no `com.rms` prefix). Open in any editor (Cursor/VS Code with the Extension Pack for Java, or Eclipse).
-- [ ] T002 Configure `pom.xml`: **Full JDK 8** target (`maven.compiler.source/target=1.8`); JavaFX comes from the JDK's bundled `jfxrt.jar` (not a Maven dependency); add dependencies for MySQL Connector/J, jBCrypt, OpenPDF, JUnit 5, and Mockito.
+- [x] T001 Create the **Maven** project and prefix-free source layout per plan.md: `pom.xml` at the repo root, `src/` with packages `app`, `controller`, `view`, `service`, `service/exception`, `service/security`, `dao`, `domain`, `domain/enums`, `util`, `config`; plus `db/` and `test/`. Configure `sourceDirectory=src` and `testSourceDirectory=test` so the prefix-free layout is preserved (no `com.rms` prefix). Open in any editor (Cursor/VS Code with the Extension Pack for Java, or Eclipse).
+- [x] T002 Configure `pom.xml`: **Full JDK 8** target (`maven.compiler.source/target=1.8`); JavaFX comes from the JDK's bundled `jfxrt.jar` (not a Maven dependency); add dependencies for MySQL Connector/J, jBCrypt, OpenPDF, JUnit 5, and Mockito.
 - [ ] T003 [P] Add `src/view/css/app.css` adapted from `design/app.css` (colors, typography, spacing tokens) — reference only, no web code reused.
-- [ ] T004 [P] Create `config/db.properties` template (host `localhost`, port `3306`, db `rms`, user, password) and document it in the project README.
+- [x] T004 [P] Create `config/db.properties` template (host `localhost`, port `3306`, db `rms`, user, password) and document it in the project README.
 
 ---
 
@@ -39,7 +39,7 @@ security primitives, utils, and app bootstrap.
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete.
 
-- [ ] T005 [P] Create all domain enums in `src/domain/enums/`: `RoleName`, `Status` (Active/Inactive), `Availability`, `TableStatus`, `OrderType`, `OrderStatus`, `DiscountType`, `PoStatus`, `MovementType`, `ReservationStatus`, `LoginEventType`.
+- [x] T005 [P] Create all domain enums in `src/domain/enums/`: `RoleName`, `Status` (Active/Inactive), `Availability`, `TableStatus`, `OrderType`, `OrderStatus`, `DiscountType`, `PoStatus`, `MovementType`, `ReservationStatus`, `LoginEventType`.
 - [ ] T006 [P] Create auth/admin domain POJOs in `src/domain/`: `Role`, `User`, `Staff`, `LoginEvent`, `SystemConfig`.
 - [ ] T007 [P] Create menu/table domain POJOs in `src/domain/`: `MenuCategory`, `MenuItem`, `DiningTable`.
 - [ ] T008 [P] Create order/billing domain POJOs in `src/domain/`: `Order`, `OrderItem`, `Payment`, `PaymentMethod`.
@@ -49,10 +49,10 @@ security primitives, utils, and app bootstrap.
 - [ ] T012 [P] Implement `src/util/Money.java` — `BigDecimal` DECIMAL(10,2) helpers with a single HALF-UP rounding step per figure (BR-13, BR-16).
 - [ ] T013 [P] Implement `src/util/Validation.java` — FRD Appendix A field rules (lengths, non-negative, email/phone format, required-contact).
 - [ ] T014 [P] Implement `src/util/DateTimeUtil.java` — timestamps, future-date checks, interval helpers for reservations.
-- [ ] T015 Write `db/schema.sql` — all 18 tables in 3NF with PK/FK/UNIQUE/NOT NULL/CHECK constraints and indexes on FKs and lookup columns, exactly per data-model.md.
-- [ ] T016 Write `db/seed.sql` — insert 3 roles, 3 payment methods, baseline `system_config` (`tax_rate`, `idle_timeout_min`=15, `login_max_attempts`=5, `reservation_slot_minutes`=90, `discount_approval_threshold`), and one active Administrator with a BCrypt-hashed password (BR-06).
-- [ ] T017 Implement `src/dao/ConnectionFactory.java` — JDBC connection provisioning plus a transaction helper (`autoCommit=false`, commit on success, rollback on exception) shared across DAOs within a service transaction.
-- [ ] T018 [P] Implement `src/config/AppConfig.java`, `src/config/DbSettings.java`, and `src/config/ReferenceDataLoader.java` (loads tax rate and tunables from `system_config`).
+- [x] T015 Write `db/schema.sql` — all 18 tables in 3NF with PK/FK/UNIQUE/NOT NULL/CHECK constraints and indexes on FKs and lookup columns, exactly per data-model.md.
+- [x] T016 Write `db/seed.sql` — insert 3 roles, 3 payment methods, baseline `system_config` (`tax_rate`, `idle_timeout_min`=15, `login_max_attempts`=5, `reservation_slot_minutes`=90, `discount_approval_threshold`), and one active Administrator with a BCrypt-hashed password (BR-06).
+- [ ] T017 Implement `src/dao/ConnectionFactory.java` — JDBC connection provisioning plus a transaction helper (`autoCommit=false`, commit on success, rollback on exception) shared across DAOs within a service transaction. _(Partial: `getConnection()` done + verified against live DB; transaction helper pending — arrives with the first transactional service.)_
+- [ ] T018 [P] Implement `src/config/AppConfig.java`, `src/config/DbSettings.java`, and `src/config/ReferenceDataLoader.java` (loads tax rate and tunables from `system_config`). _(Partial: `DbSettings` done; `AppConfig` + `ReferenceDataLoader` pending.)_
 - [ ] T019 [P] Implement `src/service/security/PasswordHasher.java` — salted BCrypt hash + verify (never logs/echoes plain text) (BR-02, NFR-04).
 - [ ] T020 [P] Implement `src/service/security/Session.java` — authenticated user + role holder, no `javafx.*` imports.
 - [ ] T021 Implement `src/service/security/Permission.java` — the permission enum and role→permission grants keyed to the FRD §2.4 matrix (Administrator ⊇ Manager ⊇ Cashier).
@@ -239,7 +239,7 @@ Cashier is denied.
 - [ ] T077 [P] Audit all `src/dao/*` for parameterised prepared statements only — no string-concatenated SQL (Principle VII).
 - [ ] T078 [P] Verify `db/schema.sql` indexes on FKs and lookup columns support the NFR-02 ~2-second targets; add any missing indexes.
 - [ ] T079 [P] Add a project `README.md` build/run section referencing `quickstart.md`.
-- [ ] T080 Run the `quickstart.md` acceptance walkthroughs (all six) and confirm SC-001…SC-009 hold.
+- [ ] T080 Run the `quickstart.md` acceptance walkthroughs (all six) and confirm SC-001…SC-010 hold (including SC-010: reference/system data is Administrator-only, audited, and never alters a finalised bill — FR-31).
 
 ---
 

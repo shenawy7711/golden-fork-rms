@@ -82,7 +82,7 @@ approval in scope, threshold is admin-configured reference data).
 
 *GATE: Must pass before Phase 0 research. Re-checked after Phase 1 design.*
 
-Evaluated against Constitution v2.0.0 (Principles I–VII + Technology Constraints).
+Evaluated against Constitution v3.0.0 (Principles I–VII + Technology Constraints).
 
 | # | Principle | Plan compliance | Status |
 |---|---|---|---|

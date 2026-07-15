@@ -88,4 +88,5 @@ Run in the recommended build order; each is independently testable.
 ## Done when
 
 All six walkthroughs pass, the three guard-rail checks are clean, and the billing suite is
-green — i.e. the Success Criteria SC-001…SC-009 hold.
+green — i.e. the Success Criteria SC-001…SC-010 hold (SC-010: reference/system data is
+Administrator-only, audited, and never alters a finalised bill — FR-31).

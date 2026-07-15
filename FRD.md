@@ -295,7 +295,7 @@ This section expands each BRD functional requirement into a full specification. 
 | Idle timeout (minutes) | Integer ≥ 0; default 15 (0 disables auto-logout). |
 | Login max attempts | Integer ≥ 1; default 5. |
 | Reservation slot (minutes) | Integer ≥ 1; default 90. |
-| Discount approval threshold | Decimal ≥ 0 — the value above which a discount requires Manager/Administrator authorisation (FR-13). |
+| Discount approval threshold | A fixed monetary amount in the configured currency (decimal ≥ 0) — the discount amount above which a discount requires Manager/Administrator authorisation (FR-13). |
 
 **Processing & Business Rules.**
 - Configuration is Administrator-only; the business layer verifies the role before any read or write (BR-03), independent of the interface.

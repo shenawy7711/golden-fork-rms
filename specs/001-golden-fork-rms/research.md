@@ -1,7 +1,7 @@
 # Phase 0 — Research & Decisions: Golden Fork RMS
 
 **Feature**: 001-golden-fork-rms | **Date**: 2026-07-14 | **Input**: TDD.md, FRD.md,
-Constitution v1.0.0, `design/`.
+Constitution v3.0.0, `design/`.
 
 All Technical Context items are resolved; there are **no open NEEDS CLARIFICATION**. The two
 formerly-open spec items are closed (see D-1, D-2). Each decision below records what was chosen,

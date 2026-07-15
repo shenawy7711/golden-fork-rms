@@ -307,8 +307,8 @@ requirements (NFR-01…NFR-08) follow.
   deactivated rather than hard-deleted once referenced by a payment). **Idle timeout minutes**
   (integer ≥ 0; default 15; 0 disables). **Login max attempts** (integer ≥ 1; default 5).
   **Reservation slot minutes** (integer ≥ 1; default 90). **Discount approval threshold**
-  (decimal ≥ 0 — the value above which a discount requires Manager/Administrator authorisation,
-  FR-13).
+  (a fixed monetary amount in the configured currency, decimal ≥ 0 — the discount *amount* above
+  which a discount requires Manager/Administrator authorisation, FR-13).
 - **Business Rules**: BR-31, BR-09, BR-18, BR-03. Reference/system data is Administrator-only,
   enforced in the business layer (`CONFIGURE_SYSTEM`) independent of the interface. Each change
   is persisted with the changing administrator and a timestamp for audit. Billing (FR-14) and
@@ -416,7 +416,8 @@ requirements (NFR-01…NFR-08) follow.
   0–100; or fixed 0 ≤ value ≤ subtotal).
 - **Business Rules**: BR-17. Discount applies to the subtotal before tax; tax is computed on the
   discounted amount. The discounted amount can never be negative (percentage capped at 100, fixed
-  capped at subtotal). **Discount approval is in scope**: a discount above a configurable threshold
+  capped at subtotal). **Discount approval is in scope**: a discount whose **amount** exceeds a
+  configurable threshold — a fixed monetary amount in the configured currency (set via FR-31) —
   requires Manager (or Administrator) authorisation before it is applied, and the authorisation is
   recorded for audit. Discounts at or below the threshold may be applied by any role permitted to
   discount, without a separate approval step.
