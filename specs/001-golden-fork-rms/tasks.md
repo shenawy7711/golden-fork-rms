@@ -1,0 +1,313 @@
+# Tasks: Golden Fork RMS
+
+**Input**: Design documents from `specs/001-golden-fork-rms/`
+
+**Prerequisites**: plan.md, spec.md, research.md, data-model.md, contracts/, constitution v3.0.0
+
+**Tests**: Targeted tests are included **only** where the constitution mandates a quality gate —
+the **Billing** suite (TDD §8.3 worked examples, Principle III) and **RBAC** checks (Principle
+IV). UI/controller tests are out of scope for this phase.
+
+**Organization**: Tasks are grouped by user story. Phase order follows the plan's recommended
+**build order** (Auth & Admin → Menu & Tables → POS/Billing → Inventory & Purchasing → Staff &
+Reservations → Reporting), which is why the P1 POS story (US1) comes after its prerequisites
+US2 (auth) and US3 (menu/tables).
+
+## Format: `[ID] [P?] [Story] Description`
+
+- **[P]**: Can run in parallel (different files, no dependency on incomplete tasks)
+- **[Story]**: US1…US6 (maps to spec.md user stories); Setup/Foundational/Polish have no label
+- All paths are relative to the repo root (see plan.md source tree)
+
+---
+
+## Phase 1: Setup (Shared Infrastructure)
+
+**Purpose**: Maven project, toolchain, and shared resources.
+
+- [ ] T001 Create the **Maven** project and prefix-free source layout per plan.md: `pom.xml` at the repo root, `src/` with packages `app`, `controller`, `view`, `service`, `service/exception`, `service/security`, `dao`, `domain`, `domain/enums`, `util`, `config`; plus `db/` and `test/`. Configure `sourceDirectory=src` and `testSourceDirectory=test` so the prefix-free layout is preserved (no `com.rms` prefix). Open in any editor (Cursor/VS Code with the Extension Pack for Java, or Eclipse).
+- [ ] T002 Configure `pom.xml`: **Full JDK 8** target (`maven.compiler.source/target=1.8`); JavaFX comes from the JDK's bundled `jfxrt.jar` (not a Maven dependency); add dependencies for MySQL Connector/J, jBCrypt, OpenPDF, JUnit 5, and Mockito.
+- [ ] T003 [P] Add `src/view/css/app.css` adapted from `design/app.css` (colors, typography, spacing tokens) — reference only, no web code reused.
+- [ ] T004 [P] Create `config/db.properties` template (host `localhost`, port `3306`, db `rms`, user, password) and document it in the project README.
+
+---
+
+## Phase 2: Foundational (Blocking Prerequisites)
+
+**Purpose**: Core infrastructure every user story depends on — schema, domain, DB access,
+security primitives, utils, and app bootstrap.
+
+**⚠️ CRITICAL**: No user story work can begin until this phase is complete.
+
+- [ ] T005 [P] Create all domain enums in `src/domain/enums/`: `RoleName`, `Status` (Active/Inactive), `Availability`, `TableStatus`, `OrderType`, `OrderStatus`, `DiscountType`, `PoStatus`, `MovementType`, `ReservationStatus`, `LoginEventType`.
+- [ ] T006 [P] Create auth/admin domain POJOs in `src/domain/`: `Role`, `User`, `Staff`, `LoginEvent`, `SystemConfig`.
+- [ ] T007 [P] Create menu/table domain POJOs in `src/domain/`: `MenuCategory`, `MenuItem`, `DiningTable`.
+- [ ] T008 [P] Create order/billing domain POJOs in `src/domain/`: `Order`, `OrderItem`, `Payment`, `PaymentMethod`.
+- [ ] T009 [P] Create inventory domain POJOs in `src/domain/`: `Supplier`, `StockItem`, `StockMovement`, `PurchaseOrder`, `PurchaseOrderItem`.
+- [ ] T010 [P] Create reservation domain POJO in `src/domain/Reservation.java`.
+- [ ] T011 [P] Create typed exceptions in `src/service/exception/`: `ValidationException`, `AuthorizationException`, `ConflictException`, `PersistenceException`.
+- [ ] T012 [P] Implement `src/util/Money.java` — `BigDecimal` DECIMAL(10,2) helpers with a single HALF-UP rounding step per figure (BR-13, BR-16).
+- [ ] T013 [P] Implement `src/util/Validation.java` — FRD Appendix A field rules (lengths, non-negative, email/phone format, required-contact).
+- [ ] T014 [P] Implement `src/util/DateTimeUtil.java` — timestamps, future-date checks, interval helpers for reservations.
+- [ ] T015 Write `db/schema.sql` — all 18 tables in 3NF with PK/FK/UNIQUE/NOT NULL/CHECK constraints and indexes on FKs and lookup columns, exactly per data-model.md.
+- [ ] T016 Write `db/seed.sql` — insert 3 roles, 3 payment methods, baseline `system_config` (`tax_rate`, `idle_timeout_min`=15, `login_max_attempts`=5, `reservation_slot_minutes`=90, `discount_approval_threshold`), and one active Administrator with a BCrypt-hashed password (BR-06).
+- [ ] T017 Implement `src/dao/ConnectionFactory.java` — JDBC connection provisioning plus a transaction helper (`autoCommit=false`, commit on success, rollback on exception) shared across DAOs within a service transaction.
+- [ ] T018 [P] Implement `src/config/AppConfig.java`, `src/config/DbSettings.java`, and `src/config/ReferenceDataLoader.java` (loads tax rate and tunables from `system_config`).
+- [ ] T019 [P] Implement `src/service/security/PasswordHasher.java` — salted BCrypt hash + verify (never logs/echoes plain text) (BR-02, NFR-04).
+- [ ] T020 [P] Implement `src/service/security/Session.java` — authenticated user + role holder, no `javafx.*` imports.
+- [ ] T021 Implement `src/service/security/Permission.java` — the permission enum and role→permission grants keyed to the FRD §2.4 matrix (Administrator ⊇ Manager ⊇ Cashier).
+- [ ] T022 Implement `src/service/security/RbacGuard.java` — `require(session, permission)` throwing `AuthorizationException` and recording denied attempts (FR-02, BR-03). (depends on T020, T021)
+- [ ] T023 Implement `src/app/Main.java` (extends `javafx.application.Application`) plus a screen-navigation/FXML loader that swaps center content and applies `app.css`.
+
+**Checkpoint**: Foundation ready — user story implementation can begin.
+
+**⚠️ Constitution gate**: after this phase, `grep -rn "javafx" src/service src/dao src/domain src/util` MUST return nothing (Principle I).
+
+---
+
+## Phase 3: User Story 2 — Authenticate & enforce role-based access (Priority: P1)
+
+**Goal**: Every user signs in before acting; each function is restricted to permitted roles,
+enforced in the business layer; accounts are administered by Administrators.
+
+**Independent Test**: With accounts per role, valid credentials log in to a role-appropriate
+home; invalid/inactive login is refused with a generic message and no session; a Cashier is
+refused price/stock/report functions even if the UI is bypassed, and the attempt is recorded.
+
+### Tests for User Story 2 (constitution RBAC gate)
+
+- [ ] T024 [P] [US2] `test/service/RbacGuardTest.java` — assert the FRD §2.4 matrix: Cashier denied `MANAGE_MENU`/`MANAGE_STOCK`/`VIEW_REPORTS`/`MANAGE_USERS`; Manager denied `MANAGE_USERS`/`CONFIGURE_SYSTEM`; Administrator allowed all.
+- [ ] T025 [P] [US2] `test/service/UserServiceTest.java` — unique-username conflict, and the last-active-Administrator rule (BR-06) rejects deactivate/delete.
+
+### Implementation for User Story 2
+
+- [ ] T026 [P] [US2] Implement `src/dao/RoleDAO.java` (read roles) with prepared statements.
+- [ ] T027 [P] [US2] Implement `src/dao/UserDAO.java` (CRUD, findByUsername case-insensitive, count active admins) with prepared statements.
+- [ ] T028 [P] [US2] Implement `src/dao/LoginEventDAO.java` (insert LOGIN/LOGOUT, query by user/range).
+- [ ] T029 [P] [US2] Implement `src/dao/SystemConfigDAO.java` (get/set config keys; list/activate payment methods) with prepared statements (FR-31).
+- [ ] T030 [US2] Implement `src/service/AuthService.java` — `login` (verify hash, refuse Inactive, throttle after `login_max_attempts`, write LOGIN event, return Session) and `logout` (invalidate, write LOGOUT, block on unsaved open order) (FR-01, FR-04; BR-01, BR-02, BR-07). (depends on T027, T028, T019, T020)
+- [ ] T031 [US2] Implement `src/service/UserService.java` — create/update/deactivate/delete with `RbacGuard.require(MANAGE_USERS)`, unique username, soft-delete-with-history, last-admin protection (FR-03; BR-04, BR-05, BR-06). (depends on T022, T027)
+- [ ] T032 [US2] Implement `src/controller/AuthController.java` + `src/view/auth.fxml` — Login screen visually matching `design/screenshots/auth-login.png` via `app.css`; Sign-up tab excluded (research D-12); maps typed exceptions to FRD messages (FR-01).
+- [ ] T033 [US2] Implement `src/controller/DashboardController.java` + `src/view/dashboard.fxml` — topbar + RBAC-filtered side nav (Operations/Management/Administration built from `Session` role) + status bar, matching the dashboard screenshots; "Viewing as" switcher removed (FR-02).
+- [ ] T034 [US2] Implement `src/controller/UserController.java` + `src/view/users.fxml` — Administrator-only account management UI over `UserService` (FR-03).
+- [ ] T035 [US2] Implement `src/service/SystemConfigService.java` — Administrator-only get/update of reference/system data (tax rate, payment methods, `idle_timeout_min`, `login_max_attempts`, `reservation_slot_minutes`, `discount_approval_threshold`) with `RbacGuard.require(CONFIGURE_SYSTEM)`, Appendix A validation, and audit (`updated_by`/`updated_at`); the tax rate is snapshotted onto orders at finalisation, never retro-applied (FR-31; BR-31, BR-03, BR-09, BR-18). (depends on T022, T029)
+- [ ] T035a [US2] Implement `src/controller/SystemConfigController.java` + `src/view/system-config.fxml` — Administrator-only reference/system-data screen over `SystemConfigService` (never the DAO directly); maps typed exceptions to FRD messages (FR-31).
+
+**Checkpoint**: Login, RBAC, account admin, and system config (FR-31) work independently.
+
+---
+
+## Phase 4: User Story 3 — Maintain the menu and dining tables (Priority: P2)
+
+**Goal**: Managers keep categories, items, prices, availability, and table layout current so
+orders are taken against accurate information.
+
+**Independent Test**: A Manager creates a category + an Available item at a valid price and can
+immediately order it; marks it Unavailable (leaves ordering, keeps history); defines a
+uniquely-labelled table with capacity; table status moves only through allowed transitions.
+
+### Implementation for User Story 3
+
+- [ ] T036 [P] [US3] Implement `src/dao/MenuCategoryDAO.java` (CRUD, count items in category) with prepared statements.
+- [ ] T037 [P] [US3] Implement `src/dao/MenuItemDAO.java` (CRUD, unique-within-category, list orderable) with prepared statements.
+- [ ] T038 [P] [US3] Implement `src/dao/DiningTableDAO.java` (CRUD, status update, existence of open order/reservation) with prepared statements.
+- [ ] T039 [US3] Implement `src/service/MenuService.java` — categories (unique name, block delete of non-empty) and items (price ≥ 0, unique-in-category, availability toggle, soft-delete with history) with `RbacGuard.require(MANAGE_MENU)` (FR-05, FR-06, FR-07; BR-08, BR-09, BR-10). (depends on T022, T036, T037)
+- [ ] T040 [US3] Implement `src/service/TableService.java` — `defineTable` (unique label, capacity ≥ 1), `deleteTable` (only when free/un-booked), `changeStatus` validating the table state machine (FR-08, FR-09; BR-11, BR-12). (depends on T022, T038)
+- [ ] T041 [US3] Implement `src/controller/MenuController.java` + `src/view/menu.fxml` — categories/items/price/availability management (FR-05…FR-07).
+- [ ] T042 [US3] Implement `src/controller/TableController.java` + `src/view/tables.fxml` — table definition + live status board with the status color helpers from `app.css` (FR-08, FR-09).
+
+**Checkpoint**: Menu and tables are manageable and feed the POS.
+
+---
+
+## Phase 5: User Story 1 — Take an order and produce an accurate bill (Priority: P1) 🎯 MVP
+
+**Goal**: The core revenue journey — a cashier goes from order entry to a paid, printed receipt
+with every figure calculated automatically, atomically finalised, immutable afterward.
+
+**Prerequisites**: US2 (auth/session/RBAC) and US3 (menu items + tables) must exist — this is
+why the P1 MVP is sequenced here per the plan's build order.
+
+**Independent Test**: With an active user, an Available item, and a Free table present, a cashier
+opens a dine-in order, adds items, applies a discount, sees tax/total computed, records payment,
+finalises atomically, prints a receipt matching the bill, and sees the table released — no manual
+arithmetic; later price/tax edits never change the finalised bill.
+
+### Tests for User Story 1 (constitution Billing gate — MUST pass)
+
+- [ ] T043 [P] [US1] `test/service/BillingServiceTest.java` — TDD §8.3 worked cases: subtotal 2×12.50+1×8.00=33.00; 10% discount on 100.00 → 10.00/base 90.00; fixed cap 25.00 on 20.00 → 20.00; tax 10% on 90.00 → 9.00, total 99.00; percentage capped at 100 and fixed capped at subtotal (never negative) (BR-13, BR-16, BR-17, BR-18).
+- [ ] T044 [P] [US1] `test/service/OrderServiceTest.java` — atomic finalise (payment + status + figures commit together; failure leaves order Open, no payment); zero-item order not finalisable; price/tax-rate immutability after finalisation (BR-19, BR-09/15/18; SC-004, SC-005).
+
+### Implementation for User Story 1
+
+- [ ] T045 [P] [US1] Implement `src/dao/PaymentMethodDAO.java` (read methods) with prepared statements.
+- [ ] T046 [P] [US1] Implement `src/dao/OrderDAO.java` (insert Open, update status+figures, unique order_number, queries) with prepared statements.
+- [ ] T047 [P] [US1] Implement `src/dao/OrderItemDAO.java` (add/remove line, list by order) with prepared statements.
+- [ ] T048 [P] [US1] Implement `src/dao/PaymentDAO.java` (insert 1:1 payment, read by order) with prepared statements.
+- [ ] T049 [US1] Implement `src/service/BillingService.java` — the single money engine: `computeSubtotal`, `applyDiscount` (caps + `APPROVE_DISCOUNT` above threshold from `system_config`), `computeTaxAndTotal` (tax-rate snapshot), all via `util/Money` (FR-12, FR-13, FR-14; BR-13/16/17/18). (depends on T012, T022, T046, T047)
+- [ ] T050 [US1] Implement `src/service/OrderService.java` — `openOrder` (unique number, dine-in table→Occupied, block existing open order), `addLine`/`removeLine` (Available only, unit-price snapshot, Open only), `voidOrder`, and `finalise` as one atomic transaction (payment + Paid/Closed + stored figures + table→Needs Cleaning), rejecting zero-item orders (FR-10, FR-11, FR-15, FR-17; BR-14/15/19). (depends on T017, T022, T040, T046, T047, T048, T049)
+- [ ] T051 [US1] Implement `src/service/ReceiptService.java` — generate a PDF that reproduces the stored finalised figures exactly and reprints identically (FR-16, BR-20). (depends on T046, T047, T048)
+- [ ] T052 [US1] Implement `src/controller/OrderController.java` + `src/view/orders.fxml` — POS: order entry, live subtotal/discount/tax/total (all from `BillingService`), payment + finalise, print receipt; maps typed exceptions to FRD messages (FR-10…FR-17).
+
+**Checkpoint**: 🎯 MVP — order-to-receipt works end-to-end with atomic, immutable billing.
+
+---
+
+## Phase 6: User Story 4 — Manage inventory, suppliers, and purchasing (Priority: P2)
+
+**Goal**: Managers record stock items and reorder levels, register suppliers, raise POs, receive
+deliveries that increase stock atomically, and are alerted on low stock.
+
+**Independent Test**: A Manager creates a stock item with a reorder level, registers a supplier,
+raises a PO (status Ordered, stock unchanged), records a delivery that raises on-hand atomically,
+sees low-stock items flagged, and clears the flag by receiving above the level.
+
+### Tests for User Story 4
+
+- [ ] T053 [P] [US4] `test/service/PurchasingServiceTest.java` — atomic receive (movement + on-hand + PO line + PO status commit together; failure leaves stock and PO unchanged); received > ordered rejected (BR-24, NFR-03).
+
+### Implementation for User Story 4
+
+- [ ] T054 [P] [US4] Implement `src/dao/SupplierDAO.java` (CRUD, unique name, PO-reference check) with prepared statements.
+- [ ] T055 [P] [US4] Implement `src/dao/StockItemDAO.java` (CRUD, add-on-hand, low-stock query) with prepared statements.
+- [ ] T056 [P] [US4] Implement `src/dao/StockMovementDAO.java` (insert ledger row) with prepared statements.
+- [ ] T057 [P] [US4] Implement `src/dao/PurchaseOrderDAO.java` (CRUD, unique po_number, status update) with prepared statements.
+- [ ] T058 [P] [US4] Implement `src/dao/PurchaseOrderItemDAO.java` (lines, add-received) with prepared statements.
+- [ ] T059 [US4] Implement `src/service/SupplierService.java` — save (unique name, format-validated contacts) and deactivate-not-delete with `RbacGuard.require(MANAGE_SUPPLIERS)` (FR-19; BR-05, BR-22). (depends on T022, T054)
+- [ ] T060 [US4] Implement `src/service/InventoryService.java` — save stock item (unique name, reorder ≥ 0), deactivate with history, `adjustStock` (atomic movement + on-hand), `lowStockItems` with `RbacGuard.require(MANAGE_STOCK)` (FR-18, FR-22; BR-05, BR-21, BR-25). (depends on T017, T022, T055, T056)
+- [ ] T061 [US4] Implement `src/service/PurchasingService.java` — `createPO` (active supplier, ≥1 line, no stock change) and `receiveDelivery` (atomic per TDD §5.4: movements + on-hand + received_qty + PO status + refresh flags) with `RbacGuard.require(MANAGE_PURCHASING)` (FR-20, FR-21; BR-23, BR-24). (depends on T017, T022, T055, T056, T057, T058)
+- [ ] T062 [P] [US4] Implement `src/controller/SupplierController.java` + `src/view/suppliers.fxml` (FR-19).
+- [ ] T063 [P] [US4] Implement `src/controller/InventoryController.java` + `src/view/inventory.fxml` — stock list with low-stock flagging (FR-18, FR-22).
+- [ ] T064 [US4] Implement `src/controller/PurchasingController.java` + `src/view/purchasing.fxml` — create PO and receive delivery (FR-20, FR-21).
+
+**Checkpoint**: Inventory, suppliers, and purchasing work with atomic stock receipt.
+
+---
+
+## Phase 7: User Story 5 — Manage staff records and reservations (Priority: P2)
+
+**Goal**: Managers maintain staff records; cashiers/managers book tables without double-booking
+and move reservations through their lifecycle.
+
+**Independent Test**: A Manager creates and deactivates a staff record (history kept); a Cashier
+books a future reservation on a free slot (table→Reserved), cannot create an overlapping booking
+on the same table, and can seat/complete/cancel it.
+
+### Tests for User Story 5
+
+- [ ] T065 [P] [US5] `test/service/ReservationServiceTest.java` — overlap algorithm (TDD §5.3): overlapping active bookings on the same table rejected; back-to-back non-overlapping allowed; cancelled/completed don't block (BR-27, FR-26).
+
+### Implementation for User Story 5
+
+- [ ] T066 [P] [US5] Implement `src/dao/StaffDAO.java` (CRUD, active list, optional user link) with prepared statements.
+- [ ] T067 [P] [US5] Implement `src/dao/ReservationDAO.java` (CRUD, active bookings by table/window for overlap, status update) with prepared statements.
+- [ ] T068 [US5] Implement `src/service/StaffService.java` — save (distinct from user accounts) and deactivate-not-delete with `RbacGuard.require(MANAGE_STAFF)` (FR-23; BR-05, BR-26). (depends on T022, T066)
+- [ ] T069 [US5] Implement `src/service/ReservationService.java` — `create` (future date, required contact, party ≤ capacity warn/override, `hasOverlap` check, table→Reserved) and `seat`/`complete`/`cancel`/`markNoShow` state machine freeing holds, with `RbacGuard.require(MANAGE_RESERVATION)` (FR-24, FR-25, FR-26; BR-27/28/29). (depends on T014, T022, T040, T067)
+- [ ] T070 [P] [US5] Implement `src/controller/StaffController.java` + `src/view/staff.fxml` (FR-23).
+- [ ] T071 [P] [US5] Implement `src/controller/ReservationController.java` + `src/view/reservations.fxml` — booking + lifecycle (FR-24…FR-26).
+
+**Checkpoint**: Staff and reservations work with double-booking prevention.
+
+---
+
+## Phase 8: User Story 6 — Generate and export management reports (Priority: P3)
+
+**Goal**: Managers/Administrators produce sales, inventory, and staff-activity reports over a
+date range and export them, reconciling to finalised data.
+
+**Independent Test**: With finalised orders and stock present, a Manager generates a sales report
+whose totals reconcile to those orders (from stored figures), an inventory report flagging low
+stock, and a staff-activity report per cashier, and exports any with parameters recorded; a
+Cashier is denied.
+
+### Implementation for User Story 6
+
+- [ ] T072 [US6] Implement `src/service/ReportService.java` — `salesReport` (finalised orders only; totals, count, AOV, tax, discounts, per-item/category from stored figures), `inventoryReport` (low-stock), `staffActivityReport` (from `login_event` + finalised orders) with `RbacGuard.require(VIEW_REPORTS)` and start ≤ end validation (FR-27, FR-28, FR-29; BR-25, BR-30). (depends on T022, T046, T047, T028, T055)
+- [ ] T073 [US6] Implement `src/util/ReportExporter.java` — export a report to PDF reproducing the on-screen content with a header of title/user/timestamp/parameters, no `javafx.*` types (FR-30). (depends on T072)
+- [ ] T074 [US6] Implement `src/controller/ReportController.java` + `src/view/reports.fxml` — report parameters, display, and export; Cashier denied (FR-27…FR-30).
+
+**Checkpoint**: All six user stories are independently functional.
+
+---
+
+## Phase 9: Polish & Cross-Cutting Concerns
+
+**Purpose**: Cross-cutting guarantees and final validation.
+
+- [ ] T075 Wire the idle-timeout auto-logout (default 15 min from `system_config`) into the app shell/session (FR-04 edge case).
+- [ ] T076 Verify the JavaFX-leak gate: `grep -rn "javafx" src/service src/dao src/domain src/util` returns nothing (Principle I).
+- [ ] T077 [P] Audit all `src/dao/*` for parameterised prepared statements only — no string-concatenated SQL (Principle VII).
+- [ ] T078 [P] Verify `db/schema.sql` indexes on FKs and lookup columns support the NFR-02 ~2-second targets; add any missing indexes.
+- [ ] T079 [P] Add a project `README.md` build/run section referencing `quickstart.md`.
+- [ ] T080 Run the `quickstart.md` acceptance walkthroughs (all six) and confirm SC-001…SC-009 hold.
+
+---
+
+## Dependencies & Execution Order
+
+### Phase dependencies
+
+- **Setup (P1)**: no dependencies.
+- **Foundational (P2)**: depends on Setup — **blocks all user stories**.
+- **US2 Auth (P3)**: depends on Foundational.
+- **US3 Menu/Tables (P4)**: depends on Foundational.
+- **US1 POS/Billing (P5)**: depends on Foundational + **US2** (session/RBAC) + **US3** (menu items via `MenuService`, tables via `TableService`).
+- **US4 Inventory (P6)**, **US5 Staff/Reservations (P7)**: depend on Foundational (+ US3's `TableService` for reservations); independent of US1.
+- **US6 Reporting (P8)**: depends on Foundational + US1 (finalised orders) + US4 (stock) + US2 (login events) for meaningful data.
+- **Polish (P9)**: depends on all targeted stories being complete.
+
+### Within each user story
+
+- DAOs (all `[P]`) → Service → Controller/FXML.
+- Constitution-gated tests (billing/RBAC/overlap/receipt) should be written alongside their service and MUST pass.
+
+### Parallel opportunities
+
+- Setup: T003, T004 in parallel.
+- Foundational: T005–T014 (domain/enums/exceptions/utils) in parallel; T018–T020 in parallel after their deps.
+- Each story's DAOs (marked `[P]`) run in parallel; controllers marked `[P]` run in parallel.
+- After Foundational, **US3, US4-DAOs, US5-DAOs** can progress in parallel with US2; US1 waits on US2+US3.
+
+---
+
+## Parallel Example: User Story 1 (POS/Billing)
+
+```bash
+# Constitution-gated tests (write alongside services, must pass):
+Task: "BillingServiceTest — TDD §8.3 worked cases in test/service/BillingServiceTest.java"
+Task: "OrderServiceTest — atomic finalise + immutability in test/service/OrderServiceTest.java"
+
+# DAOs in parallel (different files):
+Task: "PaymentMethodDAO in src/dao/PaymentMethodDAO.java"
+Task: "OrderDAO in src/dao/OrderDAO.java"
+Task: "OrderItemDAO in src/dao/OrderItemDAO.java"
+Task: "PaymentDAO in src/dao/PaymentDAO.java"
+```
+
+---
+
+## Implementation Strategy
+
+### MVP scope
+
+The headline MVP is **User Story 1 (order-to-receipt)**, but it requires **US2 (auth)** and
+**US3 (menu & tables)** as prerequisites. Minimum shippable path:
+
+1. Phase 1 Setup → Phase 2 Foundational.
+2. Phase 3 US2 (Auth & Admin) → Phase 4 US3 (Menu & Tables) → Phase 5 US1 (POS/Billing).
+3. **STOP and VALIDATE**: run the US1 walkthrough (SC-002, SC-004, SC-005). Demo the MVP.
+
+### Incremental delivery
+
+Add US4 (Inventory & Purchasing) → US5 (Staff & Reservations) → US6 (Reporting), validating each
+independently, then complete Phase 9 polish.
+
+---
+
+## Notes
+
+- `[P]` = different files, no dependency on incomplete tasks.
+- `[Story]` label maps each task to its spec.md user story for traceability (Principle VI).
+- Every task traces to an FR/BR/NFR; the DAO/Service split preserves the JavaFX-free reusable
+  core (Principles I, II).
+- Commit after each task or logical group; stop at any checkpoint to validate a story.

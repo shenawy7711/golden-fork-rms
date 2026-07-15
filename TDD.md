@@ -33,7 +33,7 @@
 
 This Technical Design Document (TDD) specifies **how** the Restaurant Management System (RMS) will be built. Where the Business Requirements Document (BRD v1.0) defines *what* the business needs and the Functional Requirements Document (FRD v1.0) defines the required system *behaviour*, this TDD defines the *engineering solution*: the layered software architecture, the class and service structure of each module, the complete relational database design (entity-relationship diagram and data dictionary), the algorithms behind billing and scheduling, the security model, the error-handling and transaction strategy, and the desktop-to-web migration approach.
 
-It is the primary reference for developers implementing the system and for reviewers confirming technical feasibility. Every design decision here is traceable back to one or more functional requirements (FR-01…FR-30), business rules (BR-01…BR-30) and non-functional requirements (NFR-01…NFR-08) defined in the parent documents.
+It is the primary reference for developers implementing the system and for reviewers confirming technical feasibility. Every design decision here is traceable back to one or more functional requirements (FR-01…FR-31), business rules (BR-01…BR-31) and non-functional requirements (NFR-01…NFR-08) defined in the parent documents.
 
 ### 1.2 Scope
 
@@ -43,8 +43,8 @@ The design covers the six functional modules of the RMS — Authentication & Adm
 
 | Ref | Document | Relationship to this TDD |
 |---|---|---|
-| REF-1 | Business Requirements Document (BRD) v1.0 | Source of business objectives BO-1…BO-6 and requirements FR-01…FR-30. |
-| REF-2 | Functional Requirements Document (FRD) v1.0 | Source of functional specifications, business rules BR-01…BR-30, state models and validation rules. |
+| REF-1 | Business Requirements Document (BRD) v1.0 | Source of business objectives BO-1…BO-6 and requirements FR-01…FR-30 (FR-31 added by FRD v1.1). |
+| REF-2 | Functional Requirements Document (FRD) v1.1 | Source of functional specifications, business rules BR-01…BR-31, state models and validation rules. |
 | REF-3 | This Technical Design Document (TDD) v1.0 | Defines architecture, database schema, ERD, component and security design. |
 | REF-4 | Test Plan & Traceability Matrix | Maps each FR / design element to verification test cases. |
 
@@ -157,7 +157,9 @@ The Java codebase is organised so that the reusable core (`domain`, `service`, `
 | Data access | Hand-written DAO + prepared statements | Transparent SQL, easy 3NF mapping, no ORM lock-in. |
 | Password hashing | BCrypt (or PBKDF2) | Salted, adaptive one-way hashing (NFR-04, BR-02). |
 | PDF / receipts / export | A PDF library (e.g. OpenPDF/JasperReports) | Receipts and report export (FR-16, FR-30). |
-| IDE / Build | **Eclipse** project | Mandated toolchain (constitution); Eclipse-managed build and dependencies. |
+| Build | **Maven** (`pom.xml`) | Declarative dependency management (Connector/J, jBCrypt, OpenPDF, JUnit 5, Mockito); JavaFX is **not** a Maven dependency — it comes from the Full JDK 8 (below). No ORM. |
+| IDE / Editor | **Editor-agnostic** — Cursor / VS Code (Extension Pack for Java) or Eclipse | The build is Maven, so any editor with Java support works; no IDE-specific project files are required. |
+| JDK distribution | **Full JDK 8** with bundled JavaFX (Oracle JDK 8, Azul Zulu FX 8, or BellSoft Liberica Full 8) | Plain OpenJDK 8 omits JavaFX; a "Full/FX" build provides `jfxrt.jar` on the classpath. |
 | Testing | JUnit 5 + Mockito | Unit-test the billing engine and rules (mitigates finance risk). |
 
 ---
@@ -587,7 +589,7 @@ Types are MySQL types. Keys: **PK** primary, **FK** foreign, **UQ** unique. NN =
 | created_by | INT | FK → user_account, NN | Who recorded it. |
 
 #### system_config
-*Reference/system data such as the tax rate (FR-14 admin config).*
+*Reference/system data such as the tax rate — configured by FR-31 (Administrator-only, audited via updated_by/updated_at, BR-31) and consumed by FR-13/FR-14.*
 
 | Column | Type | Key / Constraint | Description |
 |---|---|---|---|
@@ -613,7 +615,7 @@ Each functional module maps to a service class in the business layer plus one or
 
 ### 4.1 Authentication & Administration
 
-Realises FR-01…FR-04. **AuthService** handles login/logout and session lifecycle; **UserService** manages accounts; **RbacGuard** enforces role checks for every protected call.
+Realises FR-01…FR-04 and FR-31. **AuthService** handles login/logout and session lifecycle; **UserService** manages accounts; **SystemConfigService** manages reference/system data; **RbacGuard** enforces role checks for every protected call.
 
 | Operation (service method) | Realises | Notes |
 |---|---|---|
@@ -621,6 +623,7 @@ Realises FR-01…FR-04. **AuthService** handles login/logout and session lifecyc
 | `AuthService.logout(session)` | FR-04, BR-07 | Invalidates session, writes LOGOUT event, blocks if an unsaved order is open. |
 | `RbacGuard.require(session, permission)` | FR-02, BR-03 | Business-layer permission check; throws if the role lacks the permission. |
 | `UserService.create/update/deactivate/delete(user)` | FR-03, BR-04/05/06 | Enforces unique username, last-admin rule, soft-delete when history exists. |
+| `SystemConfigService.get/update(key, value) · payment methods` | FR-31, BR-31/03/09/18 | Administrator-only (`CONFIGURE_SYSTEM`); validates & audits (updated_by/at); tax rate snapshotted onto orders, never retro-applied. |
 
 ### 4.2 Menu & Table Management
 
@@ -861,6 +864,7 @@ Because business rules and data access are already isolated from JavaFX, migrati
 |---|---|---|---|
 | FR-01/02/04 | Login, RBAC, Logout | AuthService, RbacGuard, Session | user_account, role, login_event |
 | FR-03 | Manage users | UserService | user_account, role |
+| FR-31 | Configure reference/system data | SystemConfigService | system_config, payment_method |
 | FR-05/06/07 | Menu categories/items/availability | MenuService | menu_category, menu_item |
 | FR-08/09/17 | Tables & status | TableService | dining_table |
 | FR-10/11 | Open order, lines | OrderService | orders, order_item, menu_item |
@@ -875,7 +879,7 @@ Because business rules and data access are already isolated from JavaFX, migrati
 
 ### 8.2 Business-Rule Coverage
 
-All 30 business rules (BR-01…BR-30) are enforced in the shared business layer and/or database constraints. Financial rules BR-13/16/17/18/19 are centralised in BillingService and covered by the worked examples below; integrity rules BR-05/12/21/27 are enforced by status columns, state checks, the movement ledger and the overlap check respectively.
+All 31 business rules (BR-01…BR-31) are enforced in the shared business layer and/or database constraints (BR-31 covers Administrator-only, audited reference/system-data configuration — FR-31). Financial rules BR-13/16/17/18/19 are centralised in BillingService and covered by the worked examples below; integrity rules BR-05/12/21/27 are enforced by status columns, state checks, the movement ledger and the overlap check respectively.
 
 ### 8.3 Worked Financial Checks (unit-testable)
 

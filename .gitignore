@@ -6,7 +6,9 @@ out/
 target/
 dist/
 
-# ─── Eclipse (user-specific; keep .project / .classpath so the project imports) ───
+# ─── IDE project files (build is Maven; editor-agnostic — don't commit these) ───
+.project
+.classpath
 .metadata/
 .recommenders/
 .settings/
@@ -37,6 +39,9 @@ secrets.properties
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# ─── Stray uploaded screenshots at repo root (design/screenshots/ is kept) ───
+/Screenshot*.png
 
 # ─── Tooling: keep project governance (.specify) but drop local settings ─
 .claude/settings.local.json

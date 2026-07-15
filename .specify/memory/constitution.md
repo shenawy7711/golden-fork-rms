@@ -1,42 +1,52 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: (template / unversioned) → 1.0.0
-Bump rationale: Initial ratification. Placeholder template replaced with the concrete
-  Golden Fork RMS constitution. Under semantic-versioning for governance docs, the first
-  adopted version is 1.0.0 (MAJOR baseline), per the user-supplied "Version 1.0.0".
+Version change: 2.0.0 → 3.0.0
+Bump rationale: MAJOR (stack change). The pinned Technology Constraints are amended: build
+  toolchain **Eclipse project → Maven (`pom.xml`)**; **IDE made editor-agnostic** (Cursor / VS
+  Code with the Java extension, or Eclipse); JDK pinned to a **Full JDK 8** that bundles JavaFX
+  (Oracle / Zulu FX / Liberica Full — plain OpenJDK 8 excluded). Per this document's versioning
+  policy, "a scope/stack change" is a MAJOR bump. No core principle (I–VII) changed; the JavaFX
+  reuse boundary, layering, billing, RBAC, and integrity rules are all unaffected — only the
+  editor/build tooling and JDK-distribution wording moved. Also reconciles the shared database
+  name to **`rms`** (was `goldenfork_rms`) to match the built database.
 
-Principles defined (7):
+Prior amendment retained (v2.0.0): Principle VI scope FR-01…FR-30 → FR-01…FR-31 (FR-31
+  "Configure Reference / System Data"; BR-31). Rationale: closed the traceability gap where the
+  System Config screen had no owning FR; "a scope change" is MAJOR under the versioning policy.
+
+Principles defined (7) — unchanged in substance:
   I.   Strict Layered MVC & UI-Framework Independence
   II.  Canonical Package Structure
   III. Single Billing Engine & Immutable Finalised Bills
   IV.  Business-Layer RBAC & Password Security
   V.   Relational Integrity — 3NF, Constrained, Deactivate-Not-Delete
-  VI.  Requirement Traceability & Fixed Scope (FR-01…FR-30)
+  VI.  Requirement Traceability & Fixed Scope (FR-01…FR-31)   ← scope extended (+FR-31)
   VII. Fail-Safe Transactions & Data Integrity
 
-Added sections:
-  - Technology Constraints (stack pinned to JDK 8 / bundled jfxrt.jar / Eclipse / JDBC)
-  - Development Workflow & Quality Gates
-  - Governance
+Sections: Technology Constraints, Development Workflow & Quality Gates, Governance (unchanged).
 
-Removed sections: none (template placeholders were fully replaced).
+Templates & docs updated for the v3.0.0 stack change:
+  ✅ plan.md — Technical Context (Maven build, editor-agnostic, Full JDK 8, db `rms`), Constitution
+     Check Technology-Constraints row, and constitution ref → v3.0.0.
+  ✅ tasks.md — T001/T002 (Maven project + `pom.xml` instead of Eclipse build path), T004 (db
+     `rms`), constitution ref → v3.0.0.
+  ✅ TDD.md §2.5 — Build=Maven, IDE=editor-agnostic, JDK=Full JDK 8 rows.
+  ✅ research.md D-10 — JavaFX packaging note re-worded (Maven + Full JDK 8, not Eclipse).
+  ✅ quickstart.md — prerequisites & build/run steps re-worded for Maven / any editor; db `rms`.
+  ✅ README.md — planned-technology list (Maven; Full JDK 8; any editor).
 
-Templates & docs reviewed for consistency:
-  ✅ .specify/templates/plan-template.md — "Constitution Check" gate is generic
-     ([Gates determined based on constitution file]); no edit required. Plans MUST now
-     evaluate Principles I–VII at that gate.
-  ✅ .specify/templates/spec-template.md — generic; no mandatory section added/removed.
-  ✅ .specify/templates/tasks-template.md — generic; no principle-driven task type added.
-  ✅ .claude/skills/speckit-*/SKILL.md — command set is agent-generic; no stale refs.
+Docs updated for the v2.0.0 scope change (retained):
+  ✅ spec.md — FR-31 in Module 1; BR-31; Assumptions/Resolved Decisions/SC-010/Key Entities.
+  ✅ plan.md / tasks.md — SystemConfigService added; FR-31 traced.
+  ✅ data-model.md — `system_config` re-traced to FR-31.
+  ✅ contracts/auth-admin.md — SystemConfigService contract.
+  ✅ FRD.md — FR-31 in §3.1; BR-31; §9 + Appendix A; rev → v1.1.
+  ✅ RMS_Business_Use_Cases.md — UC-31; BUC-10 map; BR-31.
+  ✅ .specify/templates/*.md, .claude/skills/speckit-*/SKILL.md — generic; no stale refs.
 
-Follow-up TODOs / deviations — reconciled:
-  ✅ TDD.md §2.3 updated: package root `com.rms` and single `ui` package replaced with the
-    prefix-free layout `app`, `controller`, `view`, `service`, `dao`, `domain`, `util`,
-    `config` (Principle II); `ui` split into `view` + `controller`. §7.4 migration notes
-    updated to match (view+controller swapped; config listed among reused packages).
-  ✅ TDD.md §2.5 updated: Java 17 → JDK 8; JavaFX via bundled `jfxrt.jar`; Maven/Gradle →
-    Eclipse project. Now consistent with the Technology Constraints section below.
+Prior (v1.0.0) TODOs remain reconciled:
+  ✅ TDD.md §2.3/§2.5/§7.4 — prefix-free layout, Full JDK 8 / bundled jfxrt.jar / Maven.
   No unresolved bracket tokens remain.
 -->
 
@@ -44,8 +54,8 @@ Follow-up TODOs / deviations — reconciled:
 
 Golden Fork RMS is a JavaFX desktop Restaurant Management System (Phase 1) designed so its
 core is reused unchanged behind a web front end (Phase 2). This constitution is the
-non-negotiable engineering charter for that goal. It governs BRD v1.0, FRD v1.0 (FR-01…FR-30,
-BR-01…BR-30, NFR-01…NFR-08), and TDD v1.0. Where a lower document conflicts with this one,
+non-negotiable engineering charter for that goal. It governs BRD v1.0, FRD v1.1 (FR-01…FR-31,
+BR-01…BR-31, NFR-01…NFR-08), and TDD v1.0. Where a lower document conflicts with this one,
 this constitution wins and the lower document MUST be amended.
 
 ## Core Principles
@@ -154,16 +164,17 @@ Form** (NFR-07), used unchanged by both phases.
 correctness (NFR-03) and the shared contract both phases depend on; soft-delete keeps reports
 and receipts reproducible after staff, menus, or suppliers change.
 
-### VI. Requirement Traceability & Fixed Scope (FR-01…FR-30)
+### VI. Requirement Traceability & Fixed Scope (FR-01…FR-31)
 
-Scope is fixed to **FR-01 through FR-30** as specified in FRD v1.0. The out-of-scope list
-(online ordering, payment-gateway processing, kitchen displays, loyalty, payroll, multi-branch,
-mobile app) MUST NOT be built in Phase 1 or the first web migration.
+Scope is fixed to **FR-01 through FR-31** as specified in FRD v1.1 (FR-31 "Configure Reference /
+System Data" was added by the v2.0.0 amendment). The out-of-scope list (online ordering,
+payment-gateway processing, kitchen displays, loyalty, payroll, multi-branch, mobile app) MUST
+NOT be built in Phase 1 or the first web migration.
 
 - Every unit of work — spec, plan, task, class, table, and test — MUST trace to at least one
   FR, BR, or NFR identifier. Code or schema that traces to nothing is out of scope and MUST be
   removed or justified by an approved amendment.
-- New capability that is not covered by FR-01…FR-30 requires a constitution/requirements
+- New capability that is not covered by FR-01…FR-31 requires a constitution/requirements
   amendment (see Governance) before implementation; it is not added silently.
 
 **Rationale:** Fixed, traceable scope is the mitigation for the BRD's "scope creep" risk and
@@ -192,9 +203,15 @@ plus constraint-backed validation is what makes NFR-03 real rather than aspirati
 The Phase 1 stack is pinned. Changes require an amendment.
 
 - **Language/Runtime:** Java **JDK 8**.
+- **JDK distribution:** a **Full JDK 8** that bundles JavaFX (Oracle JDK 8, Azul Zulu FX 8, or
+  BellSoft Liberica Full 8). Plain OpenJDK 8 omits JavaFX and MUST NOT be used.
 - **Desktop UI:** JavaFX loaded via the **bundled `jfxrt.jar`** (not a separate module path);
   screens defined in **FXML**, one FXML + one controller per screen.
-- **IDE / Build:** **Eclipse** project.
+- **Build:** **Maven** (`pom.xml`) for dependency management; **no ORM**. JavaFX is provided by
+  the Full JDK 8, not declared as a Maven dependency.
+- **IDE / Editor:** **editor-agnostic** — any editor with Java support (Cursor / VS Code with the
+  Extension Pack for Java, or Eclipse). Because the build is Maven, no IDE-specific project files
+  are required or committed.
 - **Persistence:** **MySQL** accessed via **JDBC** (hand-written DAOs + prepared statements;
   no ORM). Schema normalised to ≥ 3NF with full constraints (Principle V).
 - **Offline:** The desktop phase MUST run on the local machine/LAN with no internet dependency
@@ -203,7 +220,8 @@ The Phase 1 stack is pinned. Changes require an amendment.
   `service`, `dao`, `domain`, `util`, `config`, and the MySQL schema are reused unchanged.
 
 Note: TDD v1.0 §2.3, §2.5, and §7.4 have been reconciled to this section and Principle II
-(JDK 8 / bundled `jfxrt.jar` / Eclipse; prefix-free `view` + `controller` layout).
+(Full JDK 8 / bundled `jfxrt.jar` / Maven / editor-agnostic; prefix-free `view` + `controller`
+layout).
 
 ## Development Workflow & Quality Gates
 
@@ -229,7 +247,7 @@ TDD) where they conflict; the lower document is then amended to match.
 
 - **Amendments** MUST be proposed in writing with rationale and the affected FR/BR/NFR
   identifiers, reviewed and approved by the Development Lead (and the Owner/Sponsor for any
-  scope change to FR-01…FR-30 or the pinned stack), and recorded here with a version bump.
+  scope change to FR-01…FR-31 or the pinned stack), and recorded here with a version bump.
 - **Versioning policy (semantic):** **MAJOR** = backward-incompatible principle removal or
   redefinition, or a scope/stack change; **MINOR** = a new principle/section or materially
   expanded guidance; **PATCH** = clarifications and wording that do not change obligations.
@@ -238,4 +256,4 @@ TDD) where they conflict; the lower document is then amended to match.
   merged silently. Recurring violations trigger a review of whether the code or the
   constitution must change — via amendment, never by quiet drift.
 
-**Version**: 1.0.0 | **Ratified**: 2026-07-14 | **Last Amended**: 2026-07-14
+**Version**: 3.0.0 | **Ratified**: 2026-07-14 | **Last Amended**: 2026-07-15

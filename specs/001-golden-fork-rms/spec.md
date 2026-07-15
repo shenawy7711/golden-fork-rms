@@ -8,7 +8,7 @@
 
 **Input**: User description: "Build the spec for Golden Fork RMS from FRD.md and RMS_Business_Use_Cases.md. Cover what the system does, not how. Three roles (Administrator, Manager, Cashier) with the FRD role-permission matrix. Six modules with all 30 functional requirements. For each FR use its actor, inputs/validation, business rules, and acceptance criteria as written in the docs. Carry BR-01 to BR-30 and NFR-01 to NFR-08. Keep it implementation-agnostic; mark anything undecided as NEEDS CLARIFICATION."
 
-**Source documents**: BRD v1.0, FRD v1.0 (FR-01…FR-30, BR-01…BR-30, NFR-01…NFR-08), RMS Business Use Cases v1.0.
+**Source documents**: BRD v1.0, FRD v1.1 (FR-01…FR-31, BR-01…BR-31, NFR-01…NFR-08), RMS Business Use Cases v1.1.
 
 ---
 
@@ -246,10 +246,10 @@ staff-activity report per cashier, and export any of them with their parameters 
 Requirements are grouped into the six modules. Each functional requirement lists its **Actor(s)**,
 **Inputs/Validation**, **Business Rules**, and **Acceptance Criteria** exactly as derived from the
 FRD. Field-level validation rules are consolidated in *Appendix A*; enumerations in *Appendix B*.
-Cross-cutting business rules (BR-01…BR-30) are catalogued after the FRs; non-functional
+Cross-cutting business rules (BR-01…BR-31) are catalogued after the FRs; non-functional
 requirements (NFR-01…NFR-08) follow.
 
-### Module 1 — Authentication & Administration (FR-01 … FR-04)
+### Module 1 — Authentication & Administration (FR-01 … FR-04, FR-31)
 
 #### FR-01 — User Login & Authentication
 - **Actor(s)**: All roles (Administrator, Manager, Cashier).
@@ -299,6 +299,28 @@ requirements (NFR-01…NFR-08) follow.
   triggers automatic logout.
 - **Acceptance Criteria**: After logout, re-invoking a protected function requires
   re-authentication. Logout with an open order prompts for resolution before ending the session.
+
+#### FR-31 — Configure Reference / System Data
+- **Actor(s)**: Administrator (only).
+- **Inputs/Validation**: **Tax rate** (required; decimal ≥ 0, ≤ 1.0000 i.e. 0–100%, stored to
+  four decimals). **Payment methods** (reference list; each name unique, 2–20 chars; activated/
+  deactivated rather than hard-deleted once referenced by a payment). **Idle timeout minutes**
+  (integer ≥ 0; default 15; 0 disables). **Login max attempts** (integer ≥ 1; default 5).
+  **Reservation slot minutes** (integer ≥ 1; default 90). **Discount approval threshold**
+  (decimal ≥ 0 — the value above which a discount requires Manager/Administrator authorisation,
+  FR-13).
+- **Business Rules**: BR-31, BR-09, BR-18, BR-03. Reference/system data is Administrator-only,
+  enforced in the business layer (`CONFIGURE_SYSTEM`) independent of the interface. Each change
+  is persisted with the changing administrator and a timestamp for audit. Billing (FR-14) and
+  validation consume the **current** values; the tax rate in force at finalisation is
+  snapshotted onto each order (BR-18), so changing it later never alters a finalised bill
+  (BR-09). Reference data (a tax rate and at least one active payment method) must exist before
+  an order can be finalised (dependency for FR-14/FR-15).
+- **Acceptance Criteria**: Only an Administrator can view or change reference/system data; a
+  non-Administrator attempt is rejected in the business layer even if the interface control were
+  bypassed, and the attempt is recorded. Changing the tax rate does not alter any previously
+  finalised bill. Every change records who changed it and when. An order cannot be finalised
+  before a tax rate and a payment method are configured.
 
 ### Module 2 — Menu & Table Management (FR-05 … FR-09)
 
@@ -582,7 +604,7 @@ requirements (NFR-01…NFR-08) follow.
 - **Acceptance Criteria**: The exported document matches the displayed report and records its
   parameters.
 
-### Business Rules Catalogue (BR-01 … BR-30)
+### Business Rules Catalogue (BR-01 … BR-31)
 
 These cross-cutting constraints are enforced consistently across the functions above (and in the
 business layer per the constitution).
@@ -619,6 +641,7 @@ business layer per the constitution).
 | BR-28 | Party size exceeding table capacity triggers a warning/override. | FR-24 |
 | BR-29 | Reservation lifecycle follows the defined state model and frees table holds on complete/cancel. | FR-25 |
 | BR-30 | Reports aggregate only finalised data over the selected range/filters. | FR-27, FR-29 |
+| BR-31 | Reference/system data (tax rate, payment methods, system constants) is Administrator-configurable only; every change is audited (who/when) and the tax rate in force is snapshotted onto each finalised order. | FR-31, FR-14 |
 
 ### Non-Functional Requirements (NFR-01 … NFR-08)
 
@@ -663,7 +686,8 @@ business layer per the constitution).
 - **Reservation** — customer name/contact, date-time, duration, party size, table, status
   (Booked/Seated/Completed/Cancelled/No-Show), creating user.
 - **Reference / System Data** — tax rate, payment methods, and other configurable constants (e.g.
-  idle timeout, login-attempt limit) consumed by billing and validation.
+  idle timeout, login-attempt limit, reservation slot, discount-approval threshold) administered
+  via FR-31 (Administrator-only, audited) and consumed by billing and validation.
 
 ---
 
@@ -692,12 +716,15 @@ business layer per the constitution).
   flagged whenever on-hand is at or below the reorder level.
 - **SC-009**: The system operates on the restaurant's local machine/network with no internet
   connection required.
+- **SC-010**: Reference/system data (tax rate, payment methods, and system constants) is
+  changeable only by an Administrator, every change is recorded with the changing user and
+  timestamp, and no such change alters any previously finalised bill.
 
 ---
 
 ## Assumptions
 
-- **Scope is fixed to FR-01 … FR-30.** The BRD out-of-scope list is excluded from this phase:
+- **Scope is fixed to FR-01 … FR-31.** The BRD out-of-scope list is excluded from this phase:
   online customer ordering/delivery, third-party payment-gateway/card processing, kitchen display
   screens, loyalty/rewards, accounting/payroll integration, multi-branch consolidation, and a
   native mobile app.
@@ -708,7 +735,8 @@ business layer per the constitution).
   re-uses the same business logic and data behind a web interface. This spec describes behaviour
   common to both; it does not prescribe the interface technology.
 - **Reference data provided at setup.** Menu, tax rate, and other reference/system data are
-  configured by the restaurant before billing; the tax rate is a single configurable value.
+  configured by the restaurant before billing (governed by **FR-31**, Administrator-only); the
+  tax rate is a single configurable value.
 - **Currency.** A single currency is used and configured at setup; amounts are shown to two
   decimals. (No multi-currency handling in scope.)
 - **Configurable defaults.** Login throttle after 5 consecutive failures; idle-logout after 15
@@ -733,3 +761,10 @@ Items that were undecided in the source documents and have been resolved for v1:
 2. **Discount approval policy (FR-13)** → **In scope.** Manager/Administrator authorisation is
    required for discounts above a configurable threshold; the threshold is admin-configured
    reference data.
+3. **Reference/system-data configuration** → **Promoted to a first-class requirement (FR-31).**
+   Previously only implied (the Role–Permission Matrix "Configure reference/system data" row and
+   FR-14's consumed tax rate), configuration of the tax rate, payment methods, and system
+   constants is now specified as **FR-31** (Administrator-only, audited), closing the
+   traceability gap in which the System Config screen traced to no functional requirement. This
+   expands the fixed scope from FR-01…FR-30 to **FR-01…FR-31** and is reflected in the
+   constitution (v2.0.0), plan, and tasks.

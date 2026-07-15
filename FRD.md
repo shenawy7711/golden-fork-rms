@@ -18,6 +18,7 @@
 | 0.1 | 5 Jul 2026 | Project Team | Initial skeleton and section outline. |
 | 0.9 | 6 Jul 2026 | Project Team | Full functional specifications drafted for all six modules. |
 | 1.0 | 7 Jul 2026 | Project Team | Complete draft released for stakeholder review; traceability matrix added. |
+| 1.1 | 15 Jul 2026 | Project Team | Added **FR-31 — Configure Reference / System Data** (Administrator-only, audited) and **BR-31**, closing the gap where reference/system-data configuration (§2.4 permission row, FR-14's consumed tax rate) had no owning FR. Scope extended FR-01…FR-30 → FR-01…FR-31. Aligns with Constitution v2.0.0. |
 
 ### Reviewers & Approvers
 
@@ -32,7 +33,7 @@
 
 | Ref | Document | Relationship |
 |---|---|---|
-| REF-1 | Business Requirements Document (BRD) — RMS v1.0 | Parent document; source of business objectives and FR-01…FR-30. |
+| REF-1 | Business Requirements Document (BRD) — RMS v1.0 | Parent document; source of business objectives and FR-01…FR-30 (FR-31 added by this FRD's v1.1 amendment). |
 | REF-2 | Development Plan (companion) | Captures technology and design decisions (JavaFX, MySQL, MVC). |
 | REF-3 | Conceptual & Logical Database Design | Detailed entity attributes and 3NF schema (design phase). |
 | REF-4 | Test Plan & Traceability Matrix | Maps each FR to test cases for verification. |
@@ -62,7 +63,7 @@
 
 This Functional Requirements Document (FRD) translates the business needs expressed in the approved Business Requirements Document (BRD v1.0) into precise, testable functional specifications for the Restaurant Management System (RMS). Where the BRD answers *what* the business needs and *why*, this FRD answers *how the system must behave* to satisfy those needs — the inputs it accepts, the rules it applies, the outputs it produces, the validations it enforces, and the conditions under which each function succeeds or fails.
 
-Every functional requirement identifier introduced in the BRD (FR-01 through FR-30) is carried forward unchanged and expanded here into a full specification. This preserves end-to-end traceability from business objective → functional requirement → use case → acceptance criterion → test case. This document deliberately avoids prescribing internal implementation detail (class design, SQL, screen pixel layout); those belong to the Development Plan and Database Design (REF-2, REF-3).
+Every functional requirement identifier introduced in the BRD (FR-01 through FR-30) is carried forward unchanged and expanded here into a full specification; **FR-31 (Configure Reference / System Data)** was subsequently added by amendment (v1.1) to give the Administrator-only reference/system-data configuration — previously only implied by the §2.4 permission matrix and FR-14 — an explicit, traceable requirement. This preserves end-to-end traceability from business objective → functional requirement → use case → acceptance criterion → test case. This document deliberately avoids prescribing internal implementation detail (class design, SQL, screen pixel layout); those belong to the Development Plan and Database Design (REF-2, REF-3).
 
 ### 1.2 Scope of the System
 
@@ -163,7 +164,7 @@ Access to every function is governed by role (RBAC). A dash means the function i
 
 This section expands each BRD functional requirement into a full specification. Requirements are grouped by module. Field-level input validation referenced here is consolidated in Appendix A; status values are enumerated in Appendix B.
 
-### 3.1 Authentication & Administration (FR-01 … FR-04)
+### 3.1 Authentication & Administration (FR-01 … FR-04, FR-31)
 
 #### FR-01 — User Login & Authentication
 - **Module:** Admin | **Priority:** High | **Actors:** All roles (Administrator, Manager, Cashier)
@@ -274,6 +275,45 @@ This section expands each BRD functional requirement into a full specification. 
 **Acceptance Criteria.**
 - After logout, pressing Back or re-invoking a protected function requires re-authentication.
 - Logout with an open order prompts for resolution before ending the session.
+
+---
+
+#### FR-31 — Configure Reference / System Data
+- **Module:** Admin | **Priority:** High | **Actors:** Administrator (only)
+- **Trigger:** Initial system commissioning, or a change to a system-wide value (e.g. a new tax rate). | **Traces:** BO-2, BO-5; NFR-04; BR-31, BR-03, BR-09, BR-18; §2.4 matrix
+
+**Description.** An Administrator shall be able to configure the reference/system data on which the rest of the system depends — the **tax rate**, the **payment-method reference list**, and system constants (**idle timeout**, **login-attempt limit**, **reservation slot duration**, **discount-approval threshold**) — so billing and validation are correct from day one. This function is exclusive to the Administrator role.
+
+**Pre-conditions.** The caller is authenticated with an active Administrator account.
+
+**Inputs.**
+
+| Field | Validation |
+|---|---|
+| Tax rate | Required; decimal ≥ 0 and ≤ 1.0000 (0–100%), stored to four decimals. |
+| Payment methods | Reference list; each name required, unique, 2–20 chars; activated/deactivated rather than hard-deleted once referenced by a payment. |
+| Idle timeout (minutes) | Integer ≥ 0; default 15 (0 disables auto-logout). |
+| Login max attempts | Integer ≥ 1; default 5. |
+| Reservation slot (minutes) | Integer ≥ 1; default 90. |
+| Discount approval threshold | Decimal ≥ 0 — the value above which a discount requires Manager/Administrator authorisation (FR-13). |
+
+**Processing & Business Rules.**
+- Configuration is Administrator-only; the business layer verifies the role before any read or write (BR-03), independent of the interface.
+- Each change is persisted with the changing administrator and a timestamp for audit (BR-31).
+- Billing (FR-14) and validation consume the **current** values. The tax rate in force at finalisation is snapshotted onto each order (BR-18); changing the rate later never alters a finalised bill (BR-09).
+- Reference data (a tax rate and at least one active payment method) must exist before an order can be finalised (dependency for FR-14/FR-15).
+
+**Outputs / Post-conditions.** Reference data is configured and available to billing and validation; every change is recorded (who/when).
+
+**Exceptions.**
+- Non-Administrator attempt → refused in the business layer with "You do not have permission to perform this action" (FR-02); the attempt is recorded.
+- Invalid value (e.g. tax rate outside 0–1, non-positive slot) → rejected with a field-specific message.
+- Finalisation attempted before a tax rate / payment method exists → blocked (dependency).
+
+**Acceptance Criteria.**
+- Only an Administrator can view or change reference/system data; a role-forbidden attempt is rejected even if the UI control were bypassed.
+- Changing the reference tax rate does not alter any previously finalised bill.
+- Every change records the changing administrator and a timestamp.
 
 ---
 
@@ -970,7 +1010,7 @@ The functions above operate over the core entities below. This is a functional-l
 | Purchase Order | Header: number, supplier, status, dates. | Belongs to a Supplier; has many PO Items. |
 | Purchase Order Item | Line: stock item, ordered qty, received qty, unit cost. | Belongs to a PO; references a Stock Item. |
 | Reservation | Customer, contact, date/time, party size, status. | Belongs to a Table. |
-| Reference Data | Tax rate, payment methods, and other system constants. | Consumed by billing and validation. |
+| Reference Data | Tax rate, payment methods, and other system constants. | Administered via FR-31 (Administrator-only, audited); consumed by billing and validation. |
 
 ### 5.2 Key Data Integrity Rules
 - Financial and stock updates occur within transactions; a failed operation leaves no partial data (NFR-03).
@@ -1025,6 +1065,7 @@ Business rules are cross-cutting constraints referenced throughout §3. They are
 | BR-28 | Party size exceeding table capacity triggers a warning/override. | FR-24 |
 | BR-29 | Reservation lifecycle follows the defined state model and frees table holds on complete/cancel. | FR-25 |
 | BR-30 | Reports aggregate only finalised data over the selected range/filters. | FR-27, FR-29 |
+| BR-31 | Reference/system data (tax rate, payment methods, system constants) is Administrator-configurable only; every change is audited (who/when) and the tax rate in force is snapshotted onto each finalised order. | FR-31, FR-14 |
 
 ---
 
@@ -1053,7 +1094,7 @@ Business rules are cross-cutting constraints referenced throughout §3. They are
 - Cashier-role staff have basic computer familiarity.
 
 ### 8.2 Dependencies
-- Reference data (tax rate, payment methods) must be configured before billing (FR-14/FR-15).
+- Reference data (tax rate, payment methods) must be configured via **FR-31** before billing (FR-14/FR-15).
 - Menu categories/items and tables must exist before orders and reservations can be taken.
 - Suppliers and stock items must exist before purchase orders and receipts.
 
@@ -1109,6 +1150,7 @@ Each functional requirement traces up to at least one business objective and acr
 | FR-28 | Inventory Report | BO-3, BO-4 | UC-5 | High |
 | FR-29 | Staff Activity Report | BO-3 | UC-5 | Medium |
 | FR-30 | Export Reports | BO-3 | UC-5 | Medium |
+| FR-31 | Configure Reference / System Data | BO-2, BO-5 | UC-2, UC-1 (setup dependency) | High |
 
 *BO-1 Speed up service · BO-2 Reduce billing errors · BO-3 Management visibility · BO-4 Control stock & cost · BO-5 Centralise data · BO-6 Prepare for growth (served by NFR-05/06 architecture, not a single FR).*
 
@@ -1144,6 +1186,9 @@ The FRD is satisfied when all of the following hold, consistent with BRD §14:
 | Reservation date/time | Valid date/time, today or future, within service hours. | Reject; "Choose a future date/time". |
 | Email / phone | Format-validated when provided. | Reject; "Enter a valid email/phone". |
 | Date range (reports) | start ≤ end; both valid dates. | Reject; "Start date must be on or before end date". |
+| Tax rate (system config) | Decimal ≥ 0 and ≤ 1.0000 (0–100%), four decimals. | Reject; "Enter a tax rate between 0 and 100%". |
+| System constants (timeout / attempts / slot) | Integers within bounds (timeout ≥ 0; attempts ≥ 1; slot ≥ 1). | Reject; field-specific message. |
+| Discount approval threshold | Decimal ≥ 0. | Reject; "Enter a non-negative value". |
 
 ---
 
@@ -1163,4 +1208,4 @@ The FRD is satisfied when all of the following hold, consistent with BRD §14:
 
 ---
 
-*— End of Functional Requirements Document (RMS-FRD v1.0) —*
+*— End of Functional Requirements Document (RMS-FRD v1.1) —*

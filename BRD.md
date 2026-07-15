@@ -112,6 +112,7 @@ Functional requirements are grouped by module. Each has a unique identifier for 
 - **FR-02** The system shall restrict access to functions based on the logged-in user's role.
 - **FR-03** An administrator shall be able to create, edit, deactivate, and delete user accounts and assign roles.
 - **FR-04** The system shall allow a user to log out and shall end the session on logout.
+- **FR-31** An administrator shall be able to configure the reference/system data on which the system depends — the tax rate, the payment-method list, and system constants (idle timeout, login-attempt limit, reservation slot, discount-approval threshold) — with every change restricted to the administrator role and recorded for audit. *(Added by FRD v1.1 / Constitution v2.0.0 to give the reference/system-data configuration an explicit requirement.)*
 
 ### 8.2 Menu & Table Management
 

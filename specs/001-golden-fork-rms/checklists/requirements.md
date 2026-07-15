@@ -34,3 +34,7 @@
 - All checklist items pass. The 2 clarifications raised at spec creation were resolved with the
   user (see spec.md → "Resolved Decisions"): split billing is out of scope (one payment per order);
   discount approval above a configurable threshold is in scope. Spec is ready for `/speckit-plan`.
+- **Amendment (2026-07-15):** FR-31 "Configure Reference / System Data" and BR-31 were added
+  (spec.md → "Resolved Decisions" #3), closing the gap where the System Config screen traced to no
+  functional requirement. Scope is now FR-01…FR-31; Constitution bumped to v2.0.0. Re-checked:
+  FR-31 has actor, inputs/validation, business rules, and acceptance criteria; SC-010 added.

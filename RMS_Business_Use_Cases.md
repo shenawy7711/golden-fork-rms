@@ -44,7 +44,7 @@ The document covers the six functional modules of the RMS — Authentication & A
 Two levels of use case are provided, and they complement each other:
 
 - **Business Workflow Use Cases (BUC-nn)** in §4 describe complete, end-to-end operational journeys (for example, serving a table from order entry to paid receipt). They show how several functions combine to deliver a business outcome.
-- **Function-Level Use Cases (UC-nn)** in §5 describe a single system function in full detail (for example, "Apply Discount"). There is one function-level use case for each functional requirement FR-01…FR-30, preserving end-to-end traceability.
+- **Function-Level Use Cases (UC-nn)** in §5 describe a single system function in full detail (for example, "Apply Discount"). There is one function-level use case for each functional requirement FR-01…FR-31, preserving end-to-end traceability.
 
 Each **full detailed** use case is specified with the fields below. The keyword *shall* denotes mandatory behaviour.
 
@@ -164,7 +164,7 @@ One use case per functional requirement, grouped by module. Each carries the sam
 
 | Module | Use Cases (FR) |
 |---|---|
-| Authentication & Administration | UC-01 Login (FR-01), UC-02 Role-Based Access Control (FR-02), UC-03 Manage User Accounts (FR-03), UC-04 Logout & Session End (FR-04) |
+| Authentication & Administration | UC-01 Login (FR-01), UC-02 Role-Based Access Control (FR-02), UC-03 Manage User Accounts (FR-03), UC-04 Logout & Session End (FR-04), UC-31 Configure Reference/System Data (FR-31) |
 | Menu & Table Management | UC-05 Manage Menu Categories (FR-05), UC-06 Manage Menu Items (FR-06), UC-07 Toggle Item Availability (FR-07), UC-08 Define Tables (FR-08), UC-09 Display & Update Table Status (FR-09) |
 | Orders & Billing (POS) | UC-10 Open Order (FR-10), UC-11 Add/Remove Order Items (FR-11), UC-12 Automatic Subtotal (FR-12), UC-13 Apply Discount (FR-13), UC-14 Automatic Tax & Total (FR-14), UC-15 Record Payment & Finalise (FR-15), UC-16 Generate Receipt (FR-16), UC-17 Release Table on Close (FR-17) |
 | Inventory & Suppliers | UC-18 Manage Stock Items (FR-18), UC-19 Register Suppliers (FR-19), UC-20 Create Purchase Order (FR-20), UC-21 Receive Delivery (FR-21), UC-22 Flag Low Stock (FR-22) |
@@ -184,7 +184,7 @@ One use case per functional requirement, grouped by module. Each carries the sam
 | BUC-7 Reporting & Export | UC-27 / UC-28 / UC-29 → UC-30 |
 | BUC-8 User & Access Administration | UC-03 (with UC-01, UC-02, UC-04) |
 | BUC-9 Staff Roster Management | UC-23 |
-| BUC-10 System Setup & Reference Data | UC-03 + reference-data configuration (feeds UC-14, UC-15) |
+| BUC-10 System Setup & Reference Data | UC-31 (+ UC-03) — reference-data configuration (feeds UC-14, UC-15) |
 
 ---
 
@@ -586,13 +586,13 @@ These use cases describe complete operational journeys. Steps in `[brackets]` re
 
 **Acceptance Criteria:** Changing the reference tax rate does not alter any previously finalised bill; only an Administrator can change reference data.
 
-**Traceability:** BO-2, BO-5; FR-02, FR-03 (reference-data administration), FR-14, FR-15.
+**Traceability:** BO-2, BO-5; FR-31 (reference-data configuration), FR-02, FR-14, FR-15.
 
 ---
 
 ## 5. Function-Level Use Cases (Detailed Catalogue)
 
-One full detailed use case per functional requirement (FR-01…FR-30), grouped by module.
+One full detailed use case per functional requirement (FR-01…FR-31), grouped by module.
 
 ### 5.1 Authentication & Administration
 
@@ -746,6 +746,47 @@ One full detailed use case per functional requirement (FR-01…FR-30), grouped b
 **Acceptance Criteria:** After logout, re-invoking a protected function requires re-authentication; logout with an open order prompts for resolution before ending the session.
 
 **Traceability:** NFR-04; FR-04.
+
+---
+
+#### UC-31 — Configure Reference / System Data
+
+| Field | Detail |
+|---|---|
+| **Module** | Admin | **Priority** | High |
+| **Primary Actor** | Administrator (only) |
+| **Secondary Actor** | RMS (System) — consumes reference data in billing/validation |
+| **Goal / Description** | Configure the reference/system data the rest of the system depends on — the tax rate, payment-method list, and system constants (idle timeout, login-attempt limit, reservation slot, discount-approval threshold) — so billing and validation are correct from day one. |
+| **Trigger** | Initial commissioning, or a change to a system-wide value (e.g. a new tax rate). |
+| **Pre-conditions** | The caller is authenticated with an active Administrator account; this function is exclusive to the Administrator role. |
+
+**Inputs:** Tax rate (required; 0 ≤ rate ≤ 1.0000, four decimals); Payment methods (unique names, 2–20 chars; activate/deactivate rather than hard-delete once used); Idle timeout minutes (integer ≥ 0, default 15); Login max attempts (integer ≥ 1, default 5); Reservation slot minutes (integer ≥ 1, default 90); Discount approval threshold (decimal ≥ 0).
+
+**Main Flow:**
+
+1. Administrator opens System Configuration.
+2. Administrator sets/edits the tax rate, payment-method list, and other system constants.
+3. The system validates each value and stores it with the changing administrator and a timestamp for audit.
+4. Billing (UC-14/UC-15) and validation subsequently use the configured values; the tax rate in force at finalisation is snapshotted onto each order.
+
+**Alternate Flows:**
+
+- **A1 — Change the tax rate later.** A new rate applies only to future finalisations; previously finalised bills keep their snapshotted rate (BR-09, BR-18).
+- **A2 — Retire a payment method.** A method referenced by past payments is deactivated (hidden from new payments) rather than deleted.
+
+**Exception Flows:**
+
+- **E1 — Non-Administrator attempt.** Blocked by RBAC in the business layer (FR-02), even if the UI were bypassed; the attempt is recorded.
+- **E2 — Invalid value.** Tax rate outside 0–1, or a non-positive slot/attempt value, is rejected with a field-specific message.
+- **E3 — Billing before configuration.** A tax rate and at least one active payment method must exist before any order can be finalised (dependency).
+
+**Post-conditions:** Reference data is configured and available to billing and validation; every change is audited (who/when).
+
+**Business Rules:** BR-31, BR-03, BR-09, BR-18.
+
+**Acceptance Criteria:** Only an Administrator can view or change reference/system data; a role-forbidden attempt is rejected at the business layer; changing the tax rate does not alter any previously finalised bill; each change records the administrator and timestamp.
+
+**Traceability:** BO-2, BO-5; NFR-04; FR-31.
 
 ---
 
@@ -1735,6 +1776,7 @@ Every function-level use case maps 1:1 to a functional requirement and up to at 
 | UC-28 Inventory Report | FR-28 | BO-3, BO-4 | BR-25 | BUC-7 | High |
 | UC-29 Staff Activity Report | FR-29 | BO-3 | BR-30 | BUC-7 | Medium |
 | UC-30 Export Reports | FR-30 | BO-3 | — | BUC-7 | Medium |
+| UC-31 Configure Reference/System Data | FR-31 | BO-2, BO-5 | BR-31, BR-03, BR-09, BR-18 | BUC-10 | High |
 
 *BO-6 (Prepare for growth) is served by the architecture (NFR-05/06) rather than a single use case, and underpins the phased desktop→web delivery of all use cases above.*
 
@@ -1791,6 +1833,7 @@ The use cases above enforce the following cross-cutting business rules (from FRD
 | BR-28 | Party size exceeding table capacity triggers a warning/override. |
 | BR-29 | Reservation lifecycle follows the defined state model and frees table holds on complete/cancel. |
 | BR-30 | Reports aggregate only finalised data over the selected range/filters. |
+| BR-31 | Reference/system data (tax rate, payment methods, system constants) is Administrator-configurable only; every change is audited (who/when) and the tax rate in force is snapshotted onto each finalised order. |
 
 ---
 
@@ -1821,4 +1864,4 @@ The use cases above enforce the following cross-cutting business rules (from FRD
 
 ---
 
-*— End of Business Use Cases Document (RMS-BUCD v1.0) —*
+*— End of Business Use Cases Document (RMS-BUCD v1.1) —*

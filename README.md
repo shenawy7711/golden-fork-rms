@@ -15,9 +15,9 @@ Spec Kit artifacts; application code follows.
 
 ## Scope
 
-Six functional modules covering functional requirements **FR-01 … FR-30**:
+Six functional modules covering functional requirements **FR-01 … FR-31**:
 
-1. **Authentication & Administration** (FR-01–FR-04)
+1. **Authentication & Administration** (FR-01–FR-04, FR-31)
 2. **Menu & Table Management** (FR-05–FR-09)
 3. **Orders & Billing / POS** (FR-10–FR-17)
 4. **Inventory & Suppliers** (FR-18–FR-22)
@@ -29,10 +29,11 @@ matrix in the business layer.
 
 ## Planned technology (Phase 1)
 
-- Java **JDK 8**
+- **Full JDK 8** with bundled JavaFX (Oracle JDK 8 / Azul Zulu FX 8 / BellSoft Liberica Full 8 —
+  plain OpenJDK 8 omits JavaFX)
 - JavaFX (bundled `jfxrt.jar`) with **FXML**, one controller per screen
-- **MySQL** via JDBC
-- Eclipse project
+- **MySQL** via JDBC (database `rms`)
+- **Maven** build (`pom.xml`); editor-agnostic — Cursor / VS Code (Extension Pack for Java) or Eclipse
 - Strict layered MVC: **View → Controller → Service → DAO → Database** (one direction); the
   service/DAO/domain/util core carries no UI-framework dependency so it is reusable in Phase 2.
 
@@ -41,7 +42,7 @@ matrix in the business layer.
 | Path | Contents |
 |---|---|
 | `BRD.md` | Business Requirements Document |
-| `FRD.md` | Functional Requirements Document (FR-01…FR-30, BR-01…BR-30, NFR-01…NFR-08) |
+| `FRD.md` | Functional Requirements Document (FR-01…FR-31, BR-01…BR-31, NFR-01…NFR-08) |
 | `TDD.md` | Technical Design Document (architecture, ERD, schema) |
 | `RMS_Business_Use_Cases.md` | Business use cases |
 | `design/` | UI design specs, stylesheet, and screen mockups |
