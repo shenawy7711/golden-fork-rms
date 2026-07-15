@@ -40,11 +40,11 @@ security primitives, utils, and app bootstrap.
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete.
 
 - [x] T005 [P] Create all domain enums in `src/domain/enums/`: `RoleName`, `Status` (Active/Inactive), `Availability`, `TableStatus`, `OrderType`, `OrderStatus`, `DiscountType`, `PoStatus`, `MovementType`, `ReservationStatus`, `LoginEventType`.
-- [ ] T006 [P] Create auth/admin domain POJOs in `src/domain/`: `Role`, `User`, `Staff`, `LoginEvent`, `SystemConfig`.
-- [ ] T007 [P] Create menu/table domain POJOs in `src/domain/`: `MenuCategory`, `MenuItem`, `DiningTable`.
-- [ ] T008 [P] Create order/billing domain POJOs in `src/domain/`: `Order`, `OrderItem`, `Payment`, `PaymentMethod`.
-- [ ] T009 [P] Create inventory domain POJOs in `src/domain/`: `Supplier`, `StockItem`, `StockMovement`, `PurchaseOrder`, `PurchaseOrderItem`.
-- [ ] T010 [P] Create reservation domain POJO in `src/domain/Reservation.java`.
+- [x] T006 [P] Create auth/admin domain POJOs in `src/domain/`: `Role`, `User`, `Staff`, `LoginEvent`, `SystemConfig`.
+- [x] T007 [P] Create menu/table domain POJOs in `src/domain/`: `MenuCategory`, `MenuItem`, `DiningTable`.
+- [x] T008 [P] Create order/billing domain POJOs in `src/domain/`: `Order`, `OrderItem`, `Payment`, `PaymentMethod`.
+- [x] T009 [P] Create inventory domain POJOs in `src/domain/`: `Supplier`, `StockItem`, `StockMovement`, `PurchaseOrder`, `PurchaseOrderItem`.
+- [x] T010 [P] Create reservation domain POJO in `src/domain/Reservation.java`.
 - [ ] T011 [P] Create typed exceptions in `src/service/exception/`: `ValidationException`, `AuthorizationException`, `ConflictException`, `PersistenceException`.
 - [ ] T012 [P] Implement `src/util/Money.java` — `BigDecimal` DECIMAL(10,2) helpers with a single HALF-UP rounding step per figure (BR-13, BR-16).
 - [ ] T013 [P] Implement `src/util/Validation.java` — FRD Appendix A field rules (lengths, non-negative, email/phone format, required-contact).
