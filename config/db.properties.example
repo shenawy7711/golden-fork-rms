@@ -1,0 +1,12 @@
+# Golden Fork RMS - database connection settings.
+#
+# 1. Copy this file to  config/db.properties
+# 2. Fill in your MySQL username and password.
+# config/db.properties is git-ignored - never commit real credentials.
+
+db.url=jdbc:mysql://localhost:3306/rms?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8
+db.user=YOUR_DB_USER
+db.password=YOUR_DB_PASSWORD
+
+# Connection pool / behaviour (optional; sensible defaults for a single-restaurant LAN)
+db.pool.maxConnections=10

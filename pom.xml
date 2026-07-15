@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>goldenfork</groupId>
+  <artifactId>golden-fork-rms</artifactId>
+  <version>1.0.0-SNAPSHOT</version>
+  <packaging>jar</packaging>
+
+  <name>Golden Fork RMS</name>
+  <description>Restaurant Management System (Phase 1, JavaFX desktop). See specs/001-golden-fork-rms.</description>
+
+  <properties>
+    <!-- Target a Full JDK 8 (bundles JavaFX via jfxrt.jar). Do NOT use `release` (JDK 9+ only). -->
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+    <!-- Dependency versions pinned to the last Java-8-compatible releases. -->
+    <connectorj.version>8.0.33</connectorj.version>
+    <jbcrypt.version>0.4</jbcrypt.version>
+    <openpdf.version>1.3.30</openpdf.version>
+    <junit.version>5.10.2</junit.version>
+    <mockito.version>4.11.0</mockito.version>
+  </properties>
+
+  <dependencies>
+    <!-- MySQL JDBC driver (hand-written DAOs + prepared statements; no ORM). -->
+    <dependency>
+      <groupId>com.mysql</groupId>
+      <artifactId>mysql-connector-j</artifactId>
+      <version>${connectorj.version}</version>
+    </dependency>
+
+    <!-- Password hashing (BR-02, NFR-04) — same library the seed's admin hash was made with. -->
+    <dependency>
+      <groupId>org.mindrot</groupId>
+      <artifactId>jbcrypt</artifactId>
+      <version>${jbcrypt.version}</version>
+    </dependency>
+
+    <!-- PDF for receipts (FR-16) and report export (FR-30). -->
+    <dependency>
+      <groupId>com.github.librepdf</groupId>
+      <artifactId>openpdf</artifactId>
+      <version>${openpdf.version}</version>
+    </dependency>
+
+    <!-- NOTE: JavaFX is NOT a dependency here — it is provided by the Full JDK 8's
+         bundled jfxrt.jar. If javafx.* fails to resolve, you are on a JDK without
+         JavaFX (e.g. plain OpenJDK 8, or a JDK 11+). Install a Full JDK 8. -->
+
+    <!-- Testing: JUnit 5 + Mockito (billing engine + business-rule tests). -->
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>${junit.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <version>${mockito.version}</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <finalName>golden-fork-rms</finalName>
+
+    <!-- Prefix-free package layout at the source root (Constitution Principle II):
+         app/ controller/ view/ service/ dao/ domain/ util/ config/ live under src/. -->
+    <sourceDirectory>src</sourceDirectory>
+    <testSourceDirectory>test</testSourceDirectory>
+
+    <!-- Copy non-Java resources (FXML, CSS, .properties) from src onto the classpath. -->
+    <resources>
+      <resource>
+        <directory>src</directory>
+        <excludes>
+          <exclude>**/*.java</exclude>
+        </excludes>
+      </resource>
+    </resources>
+
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.11.0</version>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.2.5</version>
+      </plugin>
+
+      <!-- `mvn exec:java` runs the app in dev without packaging. -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>3.1.0</version>
+        <configuration>
+          <mainClass>app.Main</mainClass>
+        </configuration>
+      </plugin>
+
+      <!-- `mvn package` builds the single deployable JAR (run with a Full JDK 8). -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>3.5.1</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals><goal>shade</goal></goals>
+            <configuration>
+              <transformers>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                  <mainClass>app.Main</mainClass>
+                </transformer>
+              </transformers>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>
