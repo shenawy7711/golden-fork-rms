@@ -53,10 +53,10 @@ security primitives, utils, and app bootstrap.
 - [x] T016 Write `db/seed.sql` — insert 3 roles, 3 payment methods, baseline `system_config` (`tax_rate`, `idle_timeout_min`=15, `login_max_attempts`=5, `reservation_slot_minutes`=90, `discount_approval_threshold`), and one active Administrator with a BCrypt-hashed password (BR-06).
 - [ ] T017 Implement `src/dao/ConnectionFactory.java` — JDBC connection provisioning plus a transaction helper (`autoCommit=false`, commit on success, rollback on exception) shared across DAOs within a service transaction. _(Partial: `getConnection()` done + verified against live DB; transaction helper pending — arrives with the first transactional service.)_
 - [ ] T018 [P] Implement `src/config/AppConfig.java`, `src/config/DbSettings.java`, and `src/config/ReferenceDataLoader.java` (loads tax rate and tunables from `system_config`). _(Partial: `DbSettings` done; `AppConfig` + `ReferenceDataLoader` pending.)_
-- [ ] T019 [P] Implement `src/service/security/PasswordHasher.java` — salted BCrypt hash + verify (never logs/echoes plain text) (BR-02, NFR-04).
-- [ ] T020 [P] Implement `src/service/security/Session.java` — authenticated user + role holder, no `javafx.*` imports.
-- [ ] T021 Implement `src/service/security/Permission.java` — the permission enum and role→permission grants keyed to the FRD §2.4 matrix (Administrator ⊇ Manager ⊇ Cashier).
-- [ ] T022 Implement `src/service/security/RbacGuard.java` — `require(session, permission)` throwing `AuthorizationException` and recording denied attempts (FR-02, BR-03). (depends on T020, T021)
+- [x] T019 [P] Implement `src/service/security/PasswordHasher.java` — salted BCrypt hash + verify (never logs/echoes plain text) (BR-02, NFR-04).
+- [x] T020 [P] Implement `src/service/security/Session.java` — authenticated user + role holder, no `javafx.*` imports.
+- [x] T021 Implement `src/service/security/Permission.java` — the permission enum and role→permission grants keyed to the FRD §2.4 matrix (Administrator ⊇ Manager ⊇ Cashier).
+- [x] T022 Implement `src/service/security/RbacGuard.java` — `require(session, permission)` throwing `AuthorizationException` and recording denied attempts (FR-02, BR-03). (depends on T020, T021)
 - [ ] T023 Implement `src/app/Main.java` (extends `javafx.application.Application`) plus a screen-navigation/FXML loader that swaps center content and applies `app.css`.
 
 **Checkpoint**: Foundation ready — user story implementation can begin.
