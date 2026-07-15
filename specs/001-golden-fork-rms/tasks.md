@@ -45,10 +45,10 @@ security primitives, utils, and app bootstrap.
 - [x] T008 [P] Create order/billing domain POJOs in `src/domain/`: `Order`, `OrderItem`, `Payment`, `PaymentMethod`.
 - [x] T009 [P] Create inventory domain POJOs in `src/domain/`: `Supplier`, `StockItem`, `StockMovement`, `PurchaseOrder`, `PurchaseOrderItem`.
 - [x] T010 [P] Create reservation domain POJO in `src/domain/Reservation.java`.
-- [ ] T011 [P] Create typed exceptions in `src/service/exception/`: `ValidationException`, `AuthorizationException`, `ConflictException`, `PersistenceException`.
-- [ ] T012 [P] Implement `src/util/Money.java` — `BigDecimal` DECIMAL(10,2) helpers with a single HALF-UP rounding step per figure (BR-13, BR-16).
-- [ ] T013 [P] Implement `src/util/Validation.java` — FRD Appendix A field rules (lengths, non-negative, email/phone format, required-contact).
-- [ ] T014 [P] Implement `src/util/DateTimeUtil.java` — timestamps, future-date checks, interval helpers for reservations.
+- [x] T011 [P] Create typed exceptions in `src/service/exception/`: `ValidationException`, `AuthorizationException`, `ConflictException`, `PersistenceException` (plus a shared `RmsException` base).
+- [x] T012 [P] Implement `src/util/Money.java` — `BigDecimal` DECIMAL(10,2) helpers with a single HALF-UP rounding step per figure (BR-13, BR-16).
+- [x] T013 [P] Implement `src/util/Validation.java` — FRD Appendix A field rules (lengths, non-negative, email/phone format, required-contact).
+- [x] T014 [P] Implement `src/util/DateTimeUtil.java` — timestamps, future-date checks, interval helpers for reservations.
 - [x] T015 Write `db/schema.sql` — all 18 tables in 3NF with PK/FK/UNIQUE/NOT NULL/CHECK constraints and indexes on FKs and lookup columns, exactly per data-model.md.
 - [x] T016 Write `db/seed.sql` — insert 3 roles, 3 payment methods, baseline `system_config` (`tax_rate`, `idle_timeout_min`=15, `login_max_attempts`=5, `reservation_slot_minutes`=90, `discount_approval_threshold`), and one active Administrator with a BCrypt-hashed password (BR-06).
 - [ ] T017 Implement `src/dao/ConnectionFactory.java` — JDBC connection provisioning plus a transaction helper (`autoCommit=false`, commit on success, rollback on exception) shared across DAOs within a service transaction. _(Partial: `getConnection()` done + verified against live DB; transaction helper pending — arrives with the first transactional service.)_
