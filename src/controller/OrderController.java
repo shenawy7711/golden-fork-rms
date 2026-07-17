@@ -145,7 +145,7 @@ public final class OrderController implements ContextAware {
             freeTables.setAll(context.tableService().listByStatus(TableStatus.FREE));
             openOrders.setAll(context.orderService().listOpenOrders());
             orderableItems.setAll(context.menuService().listOrderableItems());
-            methods.setAll(context.paymentMethodDAO().findAll());
+            methods.setAll(context.paymentMethodDAO().findActive());
             rebuildItemNames();
             if (!methods.isEmpty() && methodCombo.getValue() == null) {
                 methodCombo.setValue(methods.get(0));

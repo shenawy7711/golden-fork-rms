@@ -1,6 +1,7 @@
 package dao;
 
 import domain.PaymentMethod;
+import domain.enums.Status;
 import service.exception.PersistenceException;
 
 import java.sql.Connection;
@@ -20,11 +21,19 @@ import java.util.List;
 public final class PaymentMethodDAO {
 
     private static final String SELECT_BASE =
-        "SELECT method_id, method_name FROM payment_method";
+        "SELECT method_id, method_name, status FROM payment_method";
 
     private static final String SELECT_ALL = SELECT_BASE + " ORDER BY method_id";
 
+    private static final String SELECT_ACTIVE = SELECT_BASE + " WHERE status = 'Active' ORDER BY method_id";
+
     private static final String SELECT_BY_ID = SELECT_BASE + " WHERE method_id = ?";
+
+    private static final String COUNT_ACTIVE =
+        "SELECT COUNT(*) FROM payment_method WHERE status = 'Active'";
+
+    private static final String UPDATE_STATUS =
+        "UPDATE payment_method SET status = ? WHERE method_id = ?";
 
     private final ConnectionFactory connections;
 
@@ -38,6 +47,38 @@ public final class PaymentMethodDAO {
             return mapAll(ps);
         } catch (SQLException e) {
             throw new PersistenceException("Could not read the payment methods.", e);
+        }
+    }
+
+    /** Active methods only — what the POS offers at payment time (FR-15). */
+    public List<PaymentMethod> findActive() {
+        try (Connection connection = connections.getConnection();
+             PreparedStatement ps = connection.prepareStatement(SELECT_ACTIVE)) {
+            return mapAll(ps);
+        } catch (SQLException e) {
+            throw new PersistenceException("Could not read the payment methods.", e);
+        }
+    }
+
+    /** How many methods are currently Active — used to keep at least one (FR-15). */
+    public int countActive() {
+        try (Connection connection = connections.getConnection();
+             PreparedStatement ps = connection.prepareStatement(COUNT_ACTIVE);
+             ResultSet rs = ps.executeQuery()) {
+            return rs.next() ? rs.getInt(1) : 0;
+        } catch (SQLException e) {
+            throw new PersistenceException("Could not count the active payment methods.", e);
+        }
+    }
+
+    public void setStatus(int methodId, Status status) {
+        try (Connection connection = connections.getConnection();
+             PreparedStatement ps = connection.prepareStatement(UPDATE_STATUS)) {
+            ps.setString(1, status.dbValue());
+            ps.setInt(2, methodId);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new PersistenceException("Could not change the payment method's status.", e);
         }
     }
 
@@ -73,6 +114,7 @@ public final class PaymentMethodDAO {
         PaymentMethod method = new PaymentMethod();
         method.setMethodId(rs.getInt("method_id"));
         method.setMethodName(rs.getString("method_name"));
+        method.setStatus(Status.fromDb(rs.getString("status")));
         return method;
     }
 }

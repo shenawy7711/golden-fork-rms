@@ -141,7 +141,7 @@ public final class AppContext {
             config,
             new AuthService(userDAO, loginEventDAO, config.loginMaxAttempts()),
             new UserService(userDAO, roleDAO, loginEventDAO),
-            new SystemConfigService(systemConfigDAO),
+            new SystemConfigService(systemConfigDAO, paymentMethodDAO),
             new MenuService(menuCategoryDAO, menuItemDAO),
             tableService,
             billingService,

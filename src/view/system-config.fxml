@@ -71,9 +71,11 @@
         <Label styleClass="h2" text="Payment methods"/>
         <TableView fx:id="paymentMethodTable" VBox.vgrow="ALWAYS">
           <columns>
-            <TableColumn fx:id="methodColumn" text="Method" prefWidth="200"/>
+            <TableColumn fx:id="methodColumn" text="Method" prefWidth="150"/>
+            <TableColumn fx:id="methodStatusColumn" text="Status" prefWidth="110"/>
           </columns>
         </TableView>
+        <Button fx:id="toggleMethodButton" styleClass="qa" text="Activate / deactivate"/>
       </VBox>
 
     </VBox>

@@ -39,6 +39,7 @@ CREATE TABLE `menu_category` (
 CREATE TABLE `payment_method` (
   `method_id` int NOT NULL AUTO_INCREMENT,
   `method_name` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `status` enum('Active','Inactive') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Active',
   PRIMARY KEY (`method_id`),
   UNIQUE KEY `method_name` (`method_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

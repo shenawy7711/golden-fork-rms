@@ -24,8 +24,10 @@ import java.util.Map;
  * <p>Each operation comes in two forms: one taking a caller-supplied {@link Connection} (so it
  * enlists in an open transaction) and one that opens and closes its own.
  *
- * <p>Note: {@code payment_method} is a fixed reference set per data-model.md §2.10 — it carries no
- * {@code status} column, so methods are listed but not activated/deactivated here.
+ * <p>{@code payment_method} carries a {@code status} flag (migration 001): methods are activated or
+ * deactivated rather than hard-deleted once referenced by a payment (FR-15). Listing is here;
+ * the activate/deactivate rule (keep ≥ 1 active) lives in {@code SystemConfigService} via
+ * {@code PaymentMethodDAO}.
  */
 public final class SystemConfigDAO {
 
@@ -42,7 +44,7 @@ public final class SystemConfigDAO {
         + "updated_by = VALUES(updated_by), updated_at = VALUES(updated_at)";
 
     private static final String SELECT_PAYMENT_METHODS =
-        "SELECT method_id, method_name FROM payment_method ORDER BY method_id";
+        "SELECT method_id, method_name, status FROM payment_method ORDER BY method_id";
 
     private final ConnectionFactory connections;
 
@@ -133,6 +135,7 @@ public final class SystemConfigDAO {
                 PaymentMethod method = new PaymentMethod();
                 method.setMethodId(rs.getInt("method_id"));
                 method.setMethodName(rs.getString("method_name"));
+                method.setStatus(domain.enums.Status.fromDb(rs.getString("status")));
                 methods.add(method);
             }
         }

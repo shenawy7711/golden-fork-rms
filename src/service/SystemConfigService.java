@@ -1,8 +1,11 @@
 package service;
 
 import config.AppConfig;
+import dao.PaymentMethodDAO;
 import dao.SystemConfigDAO;
 import domain.PaymentMethod;
+import domain.enums.Status;
+import service.exception.ConflictException;
 import service.exception.ValidationException;
 import service.security.Permission;
 import service.security.RbacGuard;
@@ -31,9 +34,11 @@ public final class SystemConfigService {
     private static final BigDecimal ONE = BigDecimal.ONE;
 
     private final SystemConfigDAO systemConfigDAO;
+    private final PaymentMethodDAO paymentMethodDAO;
 
-    public SystemConfigService(SystemConfigDAO systemConfigDAO) {
+    public SystemConfigService(SystemConfigDAO systemConfigDAO, PaymentMethodDAO paymentMethodDAO) {
         this.systemConfigDAO = systemConfigDAO;
+        this.paymentMethodDAO = paymentMethodDAO;
     }
 
     /** Every configuration entry (FR-31). */
@@ -75,6 +80,27 @@ public final class SystemConfigService {
     public List<PaymentMethod> listPaymentMethods(Session session) {
         RbacGuard.require(session, Permission.CONFIGURE_SYSTEM);
         return systemConfigDAO.listPaymentMethods();
+    }
+
+    /**
+     * Activates or deactivates a payment method (FR-15, FR-31). A method is never hard-deleted — a
+     * finalised payment may reference it — so it is flipped Inactive to retire it. <b>At least one
+     * method must stay Active</b> so an order can always be paid; deactivating the last one is
+     * refused.
+     *
+     * @throws ValidationException if the method does not exist
+     * @throws ConflictException  if deactivating would leave no active method
+     */
+    public void setPaymentMethodActive(Session session, int methodId, boolean active) {
+        RbacGuard.require(session, Permission.CONFIGURE_SYSTEM);
+        PaymentMethod method = paymentMethodDAO.findById(methodId);
+        if (method == null) {
+            throw new ValidationException("That payment method no longer exists.");
+        }
+        if (!active && method.getStatus() == Status.ACTIVE && paymentMethodDAO.countActive() <= 1) {
+            throw new ConflictException("At least one payment method must stay active.");
+        }
+        paymentMethodDAO.setStatus(methodId, active ? Status.ACTIVE : Status.INACTIVE);
     }
 
     // Appendix A, "System constants" rows. Each key has its own rule; an unknown key is rejected

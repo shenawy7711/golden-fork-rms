@@ -71,6 +71,8 @@ public final class SystemConfigController implements ContextAware {
 
     @FXML private TableView<PaymentMethod> paymentMethodTable;
     @FXML private TableColumn<PaymentMethod, String> methodColumn;
+    @FXML private TableColumn<PaymentMethod, String> methodStatusColumn;
+    @FXML private Button toggleMethodButton;
 
     @FXML private Label editTitle;
     @FXML private TextField keyField;
@@ -93,6 +95,8 @@ public final class SystemConfigController implements ContextAware {
         configTable.setItems(rows);
 
         methodColumn.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue().getMethodName()));
+        methodStatusColumn.setCellValueFactory(cell -> new SimpleStringProperty(
+            cell.getValue().getStatus() == null ? "" : cell.getValue().getStatus().dbValue()));
         paymentMethodTable.setItems(methods);
 
         configTable.getSelectionModel().selectedItemProperty()
@@ -100,6 +104,7 @@ public final class SystemConfigController implements ContextAware {
 
         saveButton.setOnAction(event -> save());
         refreshButton.setOnAction(event -> reload());
+        toggleMethodButton.setOnAction(event -> togglePaymentMethod());
         setEditingEnabled(false);
     }
 
@@ -175,6 +180,21 @@ public final class SystemConfigController implements ContextAware {
             // Re-read the tunables so a new tax rate or threshold reaches the next order (FR-31).
             // Without this the change would sit in the database until the next restart.
             context.refreshConfig();
+            reload();
+        });
+    }
+
+    /** Activates or deactivates the selected payment method (FR-15, FR-31). */
+    private void togglePaymentMethod() {
+        PaymentMethod selected = paymentMethodTable.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            showMessage("Select a payment method first.");
+            return;
+        }
+        run(() -> {
+            boolean makeActive = selected.getStatus() != domain.enums.Status.ACTIVE;
+            context.systemConfigService().setPaymentMethodActive(
+                context.session(), selected.getMethodId(), makeActive);
             reload();
         });
     }

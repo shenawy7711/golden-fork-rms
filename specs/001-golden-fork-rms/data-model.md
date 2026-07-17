@@ -144,6 +144,7 @@ Price snapshots onto order lines; items with order history become Unavailable, n
 |---|---|---|
 | method_id | INT | PK |
 | method_name | VARCHAR(20) | UQ, NN — 'Cash' \| 'Card' \| 'Other' |
+| status | ENUM('Active','Inactive') | NN, default 'Active' — activated/deactivated, never hard-deleted once referenced by a payment (FR-15, FR-31); at least one method stays Active. Added by migration `db/migrations/001_payment_method_status.sql` (T029a). |
 
 ### 2.11 `payment`  *(FR-15; BR-19)*
 | Column | Type | Constraints |
