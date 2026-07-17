@@ -11,6 +11,7 @@ import dao.RoleDAO;
 import dao.SystemConfigDAO;
 import dao.UserDAO;
 import service.AuthService;
+import service.BillingService;
 import service.MenuService;
 import service.SystemConfigService;
 import service.TableService;
@@ -27,24 +28,35 @@ import service.security.Session;
  */
 public final class AppContext {
 
-    private final AppConfig config;
+    private final ReferenceDataLoader referenceDataLoader;
     private final AuthService authService;
     private final UserService userService;
     private final SystemConfigService systemConfigService;
     private final MenuService menuService;
     private final TableService tableService;
+    private final BillingService billingService;
+
+    /**
+     * The tunables in force. Not final: an administrator's FR-31 edit replaces it via
+     * {@link #refreshConfig()}, and {@link BillingService} reads it through a supplier so the new
+     * tax rate reaches the next finalisation rather than waiting for a restart.
+     */
+    private volatile AppConfig config;
 
     private Session session;
 
-    private AppContext(AppConfig config, AuthService authService, UserService userService,
+    private AppContext(ReferenceDataLoader referenceDataLoader, AppConfig config,
+                       AuthService authService, UserService userService,
                        SystemConfigService systemConfigService, MenuService menuService,
-                       TableService tableService) {
+                       TableService tableService, BillingService billingService) {
+        this.referenceDataLoader = referenceDataLoader;
         this.config = config;
         this.authService = authService;
         this.userService = userService;
         this.systemConfigService = systemConfigService;
         this.menuService = menuService;
         this.tableService = tableService;
+        this.billingService = billingService;
     }
 
     /** Wires the graph from {@code config/db.properties} and the {@code system_config} table. */
@@ -59,15 +71,34 @@ public final class AppContext {
         MenuItemDAO menuItemDAO = new MenuItemDAO(connections);
         DiningTableDAO diningTableDAO = new DiningTableDAO(connections);
 
-        AppConfig config = new ReferenceDataLoader(systemConfigDAO).loadOrDefaults();
+        ReferenceDataLoader referenceDataLoader = new ReferenceDataLoader(systemConfigDAO);
+        AppConfig config = referenceDataLoader.loadOrDefaults();
 
-        return new AppContext(
+        // Built before the context so it can be handed in; the supplier below closes over the
+        // context field, which refreshConfig() updates.
+        AppContext[] holder = new AppContext[1];
+        BillingService billingService = new BillingService(() -> holder[0].config());
+
+        AppContext context = new AppContext(
+            referenceDataLoader,
             config,
             new AuthService(userDAO, loginEventDAO, config.loginMaxAttempts()),
             new UserService(userDAO, roleDAO, loginEventDAO),
             new SystemConfigService(systemConfigDAO),
             new MenuService(menuCategoryDAO, menuItemDAO),
-            new TableService(diningTableDAO));
+            new TableService(diningTableDAO),
+            billingService);
+        holder[0] = context;
+        return context;
+    }
+
+    /**
+     * Re-reads the tunables after an administrator changes one (FR-31), so the new tax rate or
+     * threshold applies to subsequent orders without a restart. Called by
+     * {@code SystemConfigController} once a save succeeds.
+     */
+    public void refreshConfig() {
+        this.config = referenceDataLoader.loadOrDefaults();
     }
 
     public AppConfig config() { return config; }
@@ -81,6 +112,8 @@ public final class AppContext {
     public MenuService menuService() { return menuService; }
 
     public TableService tableService() { return tableService; }
+
+    public BillingService billingService() { return billingService; }
 
     /** The signed-in session, or {@code null} before login / after logout. */
     public Session session() { return session; }

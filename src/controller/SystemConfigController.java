@@ -172,6 +172,9 @@ public final class SystemConfigController implements ContextAware {
     private void save() {
         run(() -> {
             context.systemConfigService().update(context.session(), keyField.getText(), valueField.getText());
+            // Re-read the tunables so a new tax rate or threshold reaches the next order (FR-31).
+            // Without this the change would sit in the database until the next restart.
+            context.refreshConfig();
             reload();
         });
     }
