@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  Dashboard shell (T033, FR-02). Topbar + RBAC-filtered side nav + content host + status bar,
+  matching design/screenshots/dashboard-admin.png via app.css.
+
+  The "VIEWING AS" role switcher in the reference is demo-only and removed (research D-12):
+  the role comes from the authenticated Session and is enforced in the business layer.
+
+  The nav is built in DashboardController from the Screen enum filtered by the session's role —
+  not listed here — so a Cashier is never shown a Management entry.
+-->
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx/8"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="controller.DashboardController"
+            styleClass="app-root">
+
+  <!-- TOPBAR -->
+  <top>
+    <HBox styleClass="topbar" alignment="CENTER_LEFT">
+
+      <HBox spacing="12" alignment="CENTER_LEFT">
+        <StackPane styleClass="logo-tile-sm">
+          <Label styleClass="logo-mark" text="GF">
+            <font><javafx.scene.text.Font name="Georgia Bold" size="15"/></font>
+          </Label>
+        </StackPane>
+        <VBox spacing="1">
+          <Label styleClass="brand-title" text="RMS · Golden Fork"/>
+          <Label styleClass="brand-sub" text="DOWNTOWN · CAIRO"/>
+        </VBox>
+      </HBox>
+
+      <Region HBox.hgrow="ALWAYS"/>
+
+      <HBox styleClass="user-chip" spacing="10" alignment="CENTER_RIGHT">
+        <StackPane styleClass="avatar">
+          <Label fx:id="avatarLabel" text="?"/>
+        </StackPane>
+        <VBox spacing="1">
+          <Label fx:id="userNameLabel" styleClass="name" text=""/>
+          <Label fx:id="userRoleLabel" styleClass="role" text=""/>
+        </VBox>
+      </HBox>
+
+      <Button fx:id="logoutButton" styleClass="btn-outline" text="Log out"/>
+
+    </HBox>
+  </top>
+
+  <!-- SIDE NAV -->
+  <left>
+    <ScrollPane fx:id="navScroll" styleClass="sidenav-scroll"
+                fitToWidth="true" hbarPolicy="NEVER">
+      <VBox fx:id="navBox" styleClass="sidenav"/>
+    </ScrollPane>
+  </left>
+
+  <!-- CONTENT HOST — Navigator swaps this centre -->
+  <center>
+    <StackPane fx:id="contentHost"/>
+  </center>
+
+  <!-- STATUS BAR -->
+  <bottom>
+    <HBox styleClass="statusbar" alignment="CENTER_LEFT">
+      <Label fx:id="statusDot" styleClass="st-free" text="●"/>
+      <Label fx:id="statusLabel" text="Ready"/>
+      <Label text="·"/>
+      <Label fx:id="loggedInLabel" text=""/>
+      <Label text="·"/>
+      <Label fx:id="dbStatusLabel" text=""/>
+      <Region HBox.hgrow="ALWAYS"/>
+      <Label text="v1.0"/>
+    </HBox>
+  </bottom>
+
+</BorderPane>

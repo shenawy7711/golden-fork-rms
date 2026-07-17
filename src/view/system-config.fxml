@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  System settings (T035a, FR-31). Administrator-only: reachable only when the session holds
+  CONFIGURE_SYSTEM, and SystemConfigService re-checks that on every call (BR-03).
+-->
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx/8"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="controller.SystemConfigController"
+      styleClass="content" spacing="20">
+
+  <HBox alignment="CENTER_LEFT">
+    <VBox spacing="4">
+      <Label styleClass="h1,heading" text="System settings"/>
+      <Label styleClass="greeting-sub" text="Tax rate, payment methods, and system constants."/>
+    </VBox>
+    <Region HBox.hgrow="ALWAYS"/>
+    <Button fx:id="refreshButton" styleClass="qa" text="Refresh"/>
+  </HBox>
+
+  <Label fx:id="messageLabel" styleClass="form-error" maxWidth="Infinity"
+         wrapText="true" visible="false" managed="false"/>
+
+  <!-- BR-09/BR-18: a tax-rate change never touches a bill that is already finalised. -->
+  <HBox styleClass="approval-note" alignment="CENTER_LEFT">
+    <Label styleClass="badge" text="!"/>
+    <Label styleClass="label" wrapText="true"
+           text="Changes apply to future orders only. Each order stores the tax rate in force when it was finalised, so an existing bill is never re-priced."/>
+  </HBox>
+
+  <HBox spacing="20" VBox.vgrow="ALWAYS">
+
+    <VBox styleClass="panel" spacing="12" HBox.hgrow="ALWAYS">
+      <Label styleClass="h2" text="Settings"/>
+      <TableView fx:id="configTable" VBox.vgrow="ALWAYS">
+        <columns>
+          <TableColumn fx:id="keyColumn" text="Setting" prefWidth="220"/>
+          <TableColumn fx:id="valueColumn" text="Value" prefWidth="130"/>
+          <TableColumn fx:id="descriptionColumn" text="Notes" prefWidth="300"/>
+        </columns>
+      </TableView>
+    </VBox>
+
+    <VBox spacing="20" minWidth="330" prefWidth="330">
+
+      <VBox styleClass="panel" spacing="14">
+        <Label fx:id="editTitle" styleClass="h2" text="Change a setting"/>
+        <VBox styleClass="field-group" spacing="7">
+          <Label text="Setting"/>
+          <TextField fx:id="keyField" editable="false"/>
+        </VBox>
+        <VBox styleClass="field-group" spacing="7">
+          <Label text="Value"/>
+          <TextField fx:id="valueField"/>
+          <Label fx:id="ruleHint" styleClass="hint" wrapText="true" text="Select a setting to change."/>
+        </VBox>
+        <Button fx:id="saveButton" styleClass="btn-primary" text="Save change" maxWidth="Infinity"/>
+      </VBox>
+
+      <VBox styleClass="panel" spacing="12" VBox.vgrow="ALWAYS">
+        <Label styleClass="h2" text="Payment methods"/>
+        <TableView fx:id="paymentMethodTable" VBox.vgrow="ALWAYS">
+          <columns>
+            <TableColumn fx:id="methodColumn" text="Method" prefWidth="200"/>
+          </columns>
+        </TableView>
+      </VBox>
+
+    </VBox>
+
+  </HBox>
+
+</VBox>

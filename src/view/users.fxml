@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  User accounts (T034, FR-03). Administrator-only: reachable only when the session holds
+  MANAGE_USERS, and UserService re-checks that on every call regardless (BR-03).
+-->
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx/8"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="controller.UserController"
+      styleClass="content" spacing="20">
+
+  <HBox alignment="CENTER_LEFT">
+    <VBox spacing="4">
+      <Label styleClass="h1,heading" text="User accounts"/>
+      <Label styleClass="greeting-sub" text="Create accounts, set roles, and control who can sign in."/>
+    </VBox>
+    <Region HBox.hgrow="ALWAYS"/>
+    <Button fx:id="refreshButton" styleClass="qa" text="Refresh"/>
+  </HBox>
+
+  <Label fx:id="messageLabel" styleClass="form-error" maxWidth="Infinity"
+         wrapText="true" visible="false" managed="false"/>
+
+  <HBox spacing="20" VBox.vgrow="ALWAYS">
+
+    <!-- Account list -->
+    <VBox styleClass="panel" spacing="12" HBox.hgrow="ALWAYS">
+      <Label styleClass="h2" text="Accounts"/>
+      <TableView fx:id="userTable" VBox.vgrow="ALWAYS">
+        <columns>
+          <TableColumn fx:id="usernameColumn" text="Username" prefWidth="150"/>
+          <TableColumn fx:id="fullNameColumn" text="Full name" prefWidth="190"/>
+          <TableColumn fx:id="roleColumn" text="Role" prefWidth="130"/>
+          <TableColumn fx:id="statusColumn" text="Status" prefWidth="90"/>
+        </columns>
+      </TableView>
+      <HBox spacing="10">
+        <Button fx:id="deactivateButton" styleClass="qa" text="Deactivate"/>
+        <Button fx:id="activateButton" styleClass="qa" text="Activate"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button fx:id="deleteButton" styleClass="qa" text="Delete"/>
+      </HBox>
+    </VBox>
+
+    <!-- Create / edit -->
+    <VBox styleClass="panel" spacing="14" minWidth="330" prefWidth="330">
+      <Label fx:id="formTitle" styleClass="h2" text="New account"/>
+
+      <VBox styleClass="field-group" spacing="7">
+        <Label text="Username"/>
+        <TextField fx:id="usernameField" promptText="3–50 characters"/>
+      </VBox>
+
+      <VBox styleClass="field-group" spacing="7">
+        <Label text="Full name"/>
+        <TextField fx:id="fullNameField" promptText="2–100 characters"/>
+      </VBox>
+
+      <VBox styleClass="field-group" spacing="7">
+        <Label text="Role"/>
+        <ComboBox fx:id="roleCombo" maxWidth="Infinity"/>
+      </VBox>
+
+      <VBox styleClass="field-group" spacing="7">
+        <Label text="Status"/>
+        <ComboBox fx:id="statusCombo" maxWidth="Infinity"/>
+      </VBox>
+
+      <VBox fx:id="passwordGroup" styleClass="field-group" spacing="7">
+        <Label fx:id="passwordLabel" text="Initial password"/>
+        <PasswordField fx:id="passwordField"/>
+        <Label styleClass="hint" wrapText="true"
+               text="At least 8 characters, including a letter and a digit."/>
+      </VBox>
+
+      <Region VBox.vgrow="ALWAYS"/>
+
+      <VBox spacing="10">
+        <padding><Insets top="4"/></padding>
+        <Button fx:id="saveButton" styleClass="btn-primary" text="Create account" maxWidth="Infinity"/>
+        <HBox spacing="10">
+          <Button fx:id="newButton" styleClass="qa" text="New" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
+          <Button fx:id="changePasswordButton" styleClass="qa" text="Set password"
+                  maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
+        </HBox>
+      </VBox>
+    </VBox>
+
+  </HBox>
+
+</VBox>

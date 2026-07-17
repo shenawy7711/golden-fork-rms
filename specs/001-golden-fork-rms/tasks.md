@@ -27,7 +27,7 @@ US2 (auth) and US3 (menu/tables).
 
 - [x] T001 Create the **Maven** project and prefix-free source layout per plan.md: `pom.xml` at the repo root, `src/` with packages `app`, `controller`, `view`, `service`, `service/exception`, `service/security`, `dao`, `domain`, `domain/enums`, `util`, `config`; plus `db/` and `test/`. Configure `sourceDirectory=src` and `testSourceDirectory=test` so the prefix-free layout is preserved (no `com.rms` prefix). Open in any editor (Cursor/VS Code with the Extension Pack for Java, or Eclipse).
 - [x] T002 Configure `pom.xml`: **Full JDK 8** target (`maven.compiler.source/target=1.8`); JavaFX comes from the JDK's bundled `jfxrt.jar` (not a Maven dependency); add dependencies for MySQL Connector/J, jBCrypt, OpenPDF, JUnit 5, and Mockito.
-- [ ] T003 [P] Add `src/view/css/app.css` adapted from `design/app.css` (colors, typography, spacing tokens) — reference only, no web code reused.
+- [x] T003 [P] Add `src/view/css/app.css` adapted from `design/app.css` (colors, typography, spacing tokens) — reference only, no web code reused. _(Dropped the styles for UI the spec removes: `.seg-track`/`.role-pick` (Sign-up, D-12), `.role-switcher` (FR-02), and `-fx-letter-spacing` (unsupported in JavaFX 8).)_
 - [x] T004 [P] Create `config/db.properties` template (host `localhost`, port `3306`, db `rms`, user, password) and document it in the project README.
 
 ---
@@ -51,13 +51,13 @@ security primitives, utils, and app bootstrap.
 - [x] T014 [P] Implement `src/util/DateTimeUtil.java` — timestamps, future-date checks, interval helpers for reservations.
 - [x] T015 Write `db/schema.sql` — all 18 tables in 3NF with PK/FK/UNIQUE/NOT NULL/CHECK constraints and indexes on FKs and lookup columns, exactly per data-model.md.
 - [x] T016 Write `db/seed.sql` — insert 3 roles, 3 payment methods, baseline `system_config` (`tax_rate`, `idle_timeout_min`=15, `login_max_attempts`=5, `reservation_slot_minutes`=90, `discount_approval_threshold`), and one active Administrator with a BCrypt-hashed password (BR-06).
-- [ ] T017 Implement `src/dao/ConnectionFactory.java` — JDBC connection provisioning plus a transaction helper (`autoCommit=false`, commit on success, rollback on exception) shared across DAOs within a service transaction. _(Partial: `getConnection()` done + verified against live DB; transaction helper pending — arrives with the first transactional service.)_
-- [ ] T018 [P] Implement `src/config/AppConfig.java`, `src/config/DbSettings.java`, and `src/config/ReferenceDataLoader.java` (loads tax rate and tunables from `system_config`). _(Partial: `DbSettings` done; `AppConfig` + `ReferenceDataLoader` pending.)_
+- [x] T017 Implement `src/dao/ConnectionFactory.java` — JDBC connection provisioning plus a transaction helper (`autoCommit=false`, commit on success, rollback on exception) shared across DAOs within a service transaction. _(`inTransaction` returns business failures unchanged and wraps `SQLException` as `PersistenceException`. Each DAO method has a `Connection`-taking form so a service can enlist several in one transaction; first real use lands with `OrderService` (T050).)_
+- [x] T018 [P] Implement `src/config/AppConfig.java`, `src/config/DbSettings.java`, and `src/config/ReferenceDataLoader.java` (loads tax rate and tunables from `system_config`). _(Typed tunables with data-model.md §6 defaults, so a partially-seeded DB still boots. Reads via `SystemConfigDAO` rather than duplicating SQL in the config layer.)_
 - [x] T019 [P] Implement `src/service/security/PasswordHasher.java` — salted BCrypt hash + verify (never logs/echoes plain text) (BR-02, NFR-04).
 - [x] T020 [P] Implement `src/service/security/Session.java` — authenticated user + role holder, no `javafx.*` imports.
 - [x] T021 Implement `src/service/security/Permission.java` — the permission enum and role→permission grants keyed to the FRD §2.4 matrix (Administrator ⊇ Manager ⊇ Cashier).
 - [x] T022 Implement `src/service/security/RbacGuard.java` — `require(session, permission)` throwing `AuthorizationException` and recording denied attempts (FR-02, BR-03). (depends on T020, T021)
-- [ ] T023 Implement `src/app/Main.java` (extends `javafx.application.Application`) plus a screen-navigation/FXML loader that swaps center content and applies `app.css`.
+- [x] T023 Implement `src/app/Main.java` (extends `javafx.application.Application`) plus a screen-navigation/FXML loader that swaps center content and applies `app.css`. _(`AppContext` composition root, `Screen` enum (nav entry + required permission + FXML), `Navigator` (scene swap, centre swap, `app.css` applied once), `ContextAware` for controller wiring. Verified: `mvn exec:java` starts clean.)_
 
 **Checkpoint**: Foundation ready — user story implementation can begin.
 
@@ -76,24 +76,30 @@ refused price/stock/report functions even if the UI is bypassed, and the attempt
 
 ### Tests for User Story 2 (constitution RBAC gate)
 
-- [ ] T024 [P] [US2] `test/service/RbacGuardTest.java` — assert the FRD §2.4 matrix: Cashier denied `MANAGE_MENU`/`MANAGE_STOCK`/`VIEW_REPORTS`/`MANAGE_USERS`; Manager denied `MANAGE_USERS`/`CONFIGURE_SYSTEM`; Administrator allowed all.
-- [ ] T025 [P] [US2] `test/service/UserServiceTest.java` — unique-username conflict, and the last-active-Administrator rule (BR-06) rejects deactivate/delete.
+- [x] T024 [P] [US2] `test/service/RbacGuardTest.java` — assert the FRD §2.4 matrix: Cashier denied `MANAGE_MENU`/`MANAGE_STOCK`/`VIEW_REPORTS`/`MANAGE_USERS`; Manager denied `MANAGE_USERS`/`CONFIGURE_SYSTEM`; Administrator allowed all. _(12 tests, incl. cumulative-grants and null-session (BR-01). Passing.)_
+- [x] T025 [P] [US2] `test/service/UserServiceTest.java` — unique-username conflict, and the last-active-Administrator rule (BR-06) rejects deactivate/delete. _(12 tests; BR-06 covers all three routes out of the role — deactivate, delete, and demotion via update. Passing.)_
 
 ### Implementation for User Story 2
 
-- [ ] T026 [P] [US2] Implement `src/dao/RoleDAO.java` (read roles) with prepared statements.
-- [ ] T027 [P] [US2] Implement `src/dao/UserDAO.java` (CRUD, findByUsername case-insensitive, count active admins) with prepared statements.
-- [ ] T028 [P] [US2] Implement `src/dao/LoginEventDAO.java` (insert LOGIN/LOGOUT, query by user/range).
-- [ ] T029 [P] [US2] Implement `src/dao/SystemConfigDAO.java` (get/set config keys; list/activate payment methods) with prepared statements (FR-31).
-- [ ] T030 [US2] Implement `src/service/AuthService.java` — `login` (verify hash, refuse Inactive, throttle after `login_max_attempts`, write LOGIN event, return Session) and `logout` (invalidate, write LOGOUT, block on unsaved open order) (FR-01, FR-04; BR-01, BR-02, BR-07). (depends on T027, T028, T019, T020)
-- [ ] T031 [US2] Implement `src/service/UserService.java` — create/update/deactivate/delete with `RbacGuard.require(MANAGE_USERS)`, unique username, soft-delete-with-history, last-admin protection (FR-03; BR-04, BR-05, BR-06). (depends on T022, T027)
-- [ ] T032 [US2] Implement `src/controller/AuthController.java` + `src/view/auth.fxml` — Login screen visually matching `design/screenshots/auth-login.png` via `app.css`; Sign-up tab excluded (research D-12); maps typed exceptions to FRD messages (FR-01).
-- [ ] T033 [US2] Implement `src/controller/DashboardController.java` + `src/view/dashboard.fxml` — topbar + RBAC-filtered side nav (Operations/Management/Administration built from `Session` role) + status bar, matching the dashboard screenshots; "Viewing as" switcher removed (FR-02).
-- [ ] T034 [US2] Implement `src/controller/UserController.java` + `src/view/users.fxml` — Administrator-only account management UI over `UserService` (FR-03).
-- [ ] T035 [US2] Implement `src/service/SystemConfigService.java` — Administrator-only get/update of reference/system data (tax rate, payment methods, `idle_timeout_min`, `login_max_attempts`, `reservation_slot_minutes`, `discount_approval_threshold`) with `RbacGuard.require(CONFIGURE_SYSTEM)`, Appendix A validation, and audit (`updated_by`/`updated_at`); the tax rate is snapshotted onto orders at finalisation, never retro-applied (FR-31; BR-31, BR-03, BR-09, BR-18). (depends on T022, T029)
-- [ ] T035a [US2] Implement `src/controller/SystemConfigController.java` + `src/view/system-config.fxml` — Administrator-only reference/system-data screen over `SystemConfigService` (never the DAO directly); maps typed exceptions to FRD messages (FR-31).
+- [x] T026 [P] [US2] Implement `src/dao/RoleDAO.java` (read roles) with prepared statements.
+- [x] T027 [P] [US2] Implement `src/dao/UserDAO.java` (CRUD, findByUsername case-insensitive, count active admins) with prepared statements. _(Case-insensitivity comes from the column's `utf8mb4_unicode_ci` collation, so plain equality still uses the unique index; `LOWER(username)` would force a scan.)_
+- [x] T028 [P] [US2] Implement `src/dao/LoginEventDAO.java` (insert LOGIN/LOGOUT, query by user/range).
+- [x] T029 [P] [US2] Implement `src/dao/SystemConfigDAO.java` (get/set config keys; list/activate payment methods) with prepared statements (FR-31). _(**Partial — needs a decision.** Config get/set + `listPaymentMethods` done. **Activate/deactivate is NOT implemented**: FRD Appendix/§FR-31 and `contracts/auth-admin.md` both require it, but `data-model.md` §2.10 and `db/schema.sql` define `payment_method` as a fixed set with no `status` column. Resolving this means an `ALTER TABLE` on the live DB — see T029a.)_
+- [ ] T029a [US2] **Decision + migration**: reconcile `payment_method` activate/deactivate. FRD ("activated/deactivated rather than hard-deleted once referenced by a payment") and `contracts/auth-admin.md` (`setPaymentMethodActive`, "at least one active method must remain") require a status flag; `data-model.md` §2.10 and `schema.sql` omit it. Recommended: add `status ENUM('Active','Inactive') NOT NULL DEFAULT 'Active'` to `payment_method`, update `data-model.md`, ship an idempotent `ALTER`, then implement `SystemConfigDAO.setPaymentMethodActive` + `SystemConfigService.setPaymentMethodActive` (keep ≥1 active, FR-15).
+- [x] T030 [US2] Implement `src/service/AuthService.java` — `login` (verify hash, refuse Inactive, throttle after `login_max_attempts`, write LOGIN event, return Session) and `logout` (invalidate, write LOGOUT, block on unsaved open order) (FR-01, FR-04; BR-01, BR-02, BR-07). (depends on T027, T028, T019, T020)
+- [x] T031 [US2] Implement `src/service/UserService.java` — create/update/deactivate/delete with `RbacGuard.require(MANAGE_USERS)`, unique username, soft-delete-with-history, last-admin protection (FR-03; BR-04, BR-05, BR-06). (depends on T022, T027)
+- [x] T032 [US2] Implement `src/controller/AuthController.java` + `src/view/auth.fxml` — Login screen visually matching `design/screenshots/auth-login.png` via `app.css`; Sign-up tab excluded (research D-12); maps typed exceptions to FRD messages (FR-01). _(Also omitted as unbacked by any FR: "Forgot password?" (no reset flow specified) and "Remember me" (cuts against BR-02). **Visual match not yet confirmed — needs your eyes.**)_
+- [x] T033 [US2] Implement `src/controller/DashboardController.java` + `src/view/dashboard.fxml` — topbar + RBAC-filtered side nav (Operations/Management/Administration built from `Session` role) + status bar, matching the dashboard screenshots; "Viewing as" switcher removed (FR-02). _(Nav built from the `Screen` enum filtered by session permissions. Stat tiles are deliberately blank: their figures need US1/US3/US5 services, and inventing numbers would be indistinguishable from real data. **Visual match not yet confirmed.**)_
+- [x] T034 [US2] Implement `src/controller/UserController.java` + `src/view/users.fxml` — Administrator-only account management UI over `UserService` (FR-03).
+- [x] T035 [US2] Implement `src/service/SystemConfigService.java` — Administrator-only get/update of reference/system data (tax rate, payment methods, `idle_timeout_min`, `login_max_attempts`, `reservation_slot_minutes`, `discount_approval_threshold`) with `RbacGuard.require(CONFIGURE_SYSTEM)`, Appendix A validation, and audit (`updated_by`/`updated_at`); the tax rate is snapshotted onto orders at finalisation, never retro-applied (FR-31; BR-31, BR-03, BR-09, BR-18). (depends on T022, T029)
+- [x] T035a [US2] Implement `src/controller/SystemConfigController.java` + `src/view/system-config.fxml` — Administrator-only reference/system-data screen over `SystemConfigService` (never the DAO directly); maps typed exceptions to FRD messages (FR-31). _(Payment methods are listed read-only pending T029a.)_
 
 **Checkpoint**: Login, RBAC, account admin, and system config (FR-31) work independently.
+_Reached._ Verified against the live DB: seeded `admin` signs in and resolves as ADMINISTRATOR;
+username match is case-insensitive; a wrong password and an unknown username return byte-identical
+messages (no enumeration); an admin session reaches config (5 keys) and the user list. `mvn exec:java`
+starts clean and all 30 tests pass. Outstanding for this phase: **T029a** (payment-method decision)
+and a visual pass over T032/T033 against the reference screenshots.
 
 ---
 
