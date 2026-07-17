@@ -254,11 +254,17 @@ Cashier is denied.
 
 ### Implementation for User Story 6
 
-- [ ] T072 [US6] Implement `src/service/ReportService.java` — `salesReport` (finalised orders only; totals, count, AOV, tax, discounts, per-item/category from stored figures), `inventoryReport` (low-stock), `staffActivityReport` (from `login_event` + finalised orders) with `RbacGuard.require(VIEW_REPORTS)` and start ≤ end validation (FR-27, FR-28, FR-29; BR-25, BR-30). (depends on T022, T046, T047, T028, T055)
-- [ ] T073 [US6] Implement `src/util/ReportExporter.java` — export a report to PDF reproducing the on-screen content with a header of title/user/timestamp/parameters, no `javafx.*` types (FR-30). (depends on T072)
-- [ ] T074 [US6] Implement `src/controller/ReportController.java` + `src/view/reports.fxml` — report parameters, display, and export; Cashier denied (FR-27…FR-30).
+- [x] T072 [US6] Implement `src/service/ReportService.java` — `salesReport` (finalised orders only; totals, count, AOV, tax, discounts, per-item/category from stored figures), `inventoryReport` (low-stock), `staffActivityReport` (from `login_event` + finalised orders) with `RbacGuard.require(VIEW_REPORTS)` and start ≤ end validation (FR-27, FR-28, FR-29; BR-25, BR-30). (depends on T022, T046, T047, T028, T055)
+- [x] T073 [US6] Implement `src/util/ReportExporter.java` — export a report to PDF reproducing the on-screen content with a header of title/user/timestamp/parameters, no `javafx.*` types (FR-30). (depends on T072)
+- [x] T074 [US6] Implement `src/controller/ReportController.java` + `src/view/reports.fxml` — report parameters, display, and export; Cashier denied (FR-27…FR-30).
 
 **Checkpoint**: All six user stories are independently functional.
+_Reached and verified end-to-end against the live DB._ Reports are built as a neutral `ReportDocument`
+that both the on-screen view and the PDF exporter consume, so an export reproduces the display exactly
+(FR-30). A reconciliation check confirmed BR-30/SC-007: adding one finalised order moved the sales report's
+total by exactly that order's amount (before 33.86 → after 48.11, delta 14.25), the sold item appeared in the
+per-item section, the inventory and staff-activity reports generated, the sales PDF exported non-empty, and an
+inverted date range was refused. All 86 tests pass; JavaFX-leak and prepared-statement gates clean.
 
 ---
 

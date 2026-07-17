@@ -28,6 +28,7 @@ import service.MenuService;
 import service.OrderService;
 import service.PurchasingService;
 import service.ReceiptService;
+import service.ReportService;
 import service.ReservationService;
 import service.StaffService;
 import service.SupplierService;
@@ -35,6 +36,7 @@ import service.SystemConfigService;
 import service.TableService;
 import service.UserService;
 import service.security.Session;
+import util.ReportExporter;
 
 /**
  * The application's composition root: builds the DAOs and services once and hands them to whatever
@@ -61,6 +63,8 @@ public final class AppContext {
     private final PurchasingService purchasingService;
     private final StaffService staffService;
     private final ReservationService reservationService;
+    private final ReportService reportService;
+    private final ReportExporter reportExporter;
 
     /**
      * The tunables in force. Not final: an administrator's FR-31 edit replaces it via
@@ -78,7 +82,8 @@ public final class AppContext {
                        OrderService orderService, ReceiptService receiptService,
                        PaymentMethodDAO paymentMethodDAO, SupplierService supplierService,
                        InventoryService inventoryService, PurchasingService purchasingService,
-                       StaffService staffService, ReservationService reservationService) {
+                       StaffService staffService, ReservationService reservationService,
+                       ReportService reportService, ReportExporter reportExporter) {
         this.referenceDataLoader = referenceDataLoader;
         this.config = config;
         this.authService = authService;
@@ -95,6 +100,8 @@ public final class AppContext {
         this.purchasingService = purchasingService;
         this.staffService = staffService;
         this.reservationService = reservationService;
+        this.reportService = reportService;
+        this.reportExporter = reportExporter;
     }
 
     /** Wires the graph from {@code config/db.properties} and the {@code system_config} table. */
@@ -148,7 +155,10 @@ public final class AppContext {
                 purchaseOrderDAO, purchaseOrderItemDAO),
             new StaffService(staffDAO),
             new ReservationService(connections, reservationDAO, diningTableDAO, tableService,
-                () -> holder[0].config()));
+                () -> holder[0].config()),
+            new ReportService(orderDAO, orderItemDAO, menuItemDAO, menuCategoryDAO, stockItemDAO,
+                loginEventDAO, userDAO),
+            new ReportExporter());
         holder[0] = context;
         return context;
     }
@@ -191,6 +201,10 @@ public final class AppContext {
     public StaffService staffService() { return staffService; }
 
     public ReservationService reservationService() { return reservationService; }
+
+    public ReportService reportService() { return reportService; }
+
+    public ReportExporter reportExporter() { return reportExporter; }
 
     /** The signed-in session, or {@code null} before login / after logout. */
     public Session session() { return session; }

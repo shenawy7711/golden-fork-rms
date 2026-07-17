@@ -28,7 +28,7 @@ public enum Screen {
     SUPPLIERS("Suppliers", Section.MANAGEMENT, Permission.MANAGE_SUPPLIERS, "/view/suppliers.fxml", "SP", true),
     PURCHASING("Purchasing", Section.MANAGEMENT, Permission.MANAGE_PURCHASING, "/view/purchasing.fxml", "PO", true),
     STAFF("Staff", Section.MANAGEMENT, Permission.MANAGE_STAFF, "/view/staff.fxml", "ST", true),
-    REPORTS("Reports", Section.MANAGEMENT, Permission.VIEW_REPORTS, "/view/reports.fxml", "RP", false),
+    REPORTS("Reports", Section.MANAGEMENT, Permission.VIEW_REPORTS, "/view/reports.fxml", "RP", true),
 
     // --- Administration ---
     USERS("User Accounts", Section.ADMINISTRATION, Permission.MANAGE_USERS, "/view/users.fxml", "US", true),
