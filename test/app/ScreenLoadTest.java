@@ -76,6 +76,30 @@ class ScreenLoadTest {
     }
 
     @Test
+    @DisplayName("orders.fxml (T052)")
+    void ordersLoads() throws Exception {
+        assertLoads("/view/orders.fxml");
+    }
+
+    @Test
+    @DisplayName("suppliers.fxml (T062)")
+    void suppliersLoads() throws Exception {
+        assertLoads("/view/suppliers.fxml");
+    }
+
+    @Test
+    @DisplayName("inventory.fxml (T063)")
+    void inventoryLoads() throws Exception {
+        assertLoads("/view/inventory.fxml");
+    }
+
+    @Test
+    @DisplayName("purchasing.fxml (T064)")
+    void purchasingLoads() throws Exception {
+        assertLoads("/view/purchasing.fxml");
+    }
+
+    @Test
     @DisplayName("app.css is on the classpath where Navigator expects it (T003)")
     void stylesheetIsPresent() {
         assertNotNull(ScreenLoadTest.class.getResource("/view/css/app.css"),

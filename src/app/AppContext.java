@@ -11,14 +11,22 @@ import dao.OrderDAO;
 import dao.OrderItemDAO;
 import dao.PaymentDAO;
 import dao.PaymentMethodDAO;
+import dao.PurchaseOrderDAO;
+import dao.PurchaseOrderItemDAO;
 import dao.RoleDAO;
+import dao.StockItemDAO;
+import dao.StockMovementDAO;
+import dao.SupplierDAO;
 import dao.SystemConfigDAO;
 import dao.UserDAO;
 import service.AuthService;
 import service.BillingService;
+import service.InventoryService;
 import service.MenuService;
 import service.OrderService;
+import service.PurchasingService;
 import service.ReceiptService;
+import service.SupplierService;
 import service.SystemConfigService;
 import service.TableService;
 import service.UserService;
@@ -44,6 +52,9 @@ public final class AppContext {
     private final OrderService orderService;
     private final ReceiptService receiptService;
     private final PaymentMethodDAO paymentMethodDAO;
+    private final SupplierService supplierService;
+    private final InventoryService inventoryService;
+    private final PurchasingService purchasingService;
 
     /**
      * The tunables in force. Not final: an administrator's FR-31 edit replaces it via
@@ -59,7 +70,8 @@ public final class AppContext {
                        SystemConfigService systemConfigService, MenuService menuService,
                        TableService tableService, BillingService billingService,
                        OrderService orderService, ReceiptService receiptService,
-                       PaymentMethodDAO paymentMethodDAO) {
+                       PaymentMethodDAO paymentMethodDAO, SupplierService supplierService,
+                       InventoryService inventoryService, PurchasingService purchasingService) {
         this.referenceDataLoader = referenceDataLoader;
         this.config = config;
         this.authService = authService;
@@ -71,6 +83,9 @@ public final class AppContext {
         this.orderService = orderService;
         this.receiptService = receiptService;
         this.paymentMethodDAO = paymentMethodDAO;
+        this.supplierService = supplierService;
+        this.inventoryService = inventoryService;
+        this.purchasingService = purchasingService;
     }
 
     /** Wires the graph from {@code config/db.properties} and the {@code system_config} table. */
@@ -88,6 +103,11 @@ public final class AppContext {
         OrderItemDAO orderItemDAO = new OrderItemDAO(connections);
         PaymentDAO paymentDAO = new PaymentDAO(connections);
         PaymentMethodDAO paymentMethodDAO = new PaymentMethodDAO(connections);
+        SupplierDAO supplierDAO = new SupplierDAO(connections);
+        StockItemDAO stockItemDAO = new StockItemDAO(connections);
+        StockMovementDAO stockMovementDAO = new StockMovementDAO(connections);
+        PurchaseOrderDAO purchaseOrderDAO = new PurchaseOrderDAO(connections);
+        PurchaseOrderItemDAO purchaseOrderItemDAO = new PurchaseOrderItemDAO(connections);
 
         ReferenceDataLoader referenceDataLoader = new ReferenceDataLoader(systemConfigDAO);
         AppConfig config = referenceDataLoader.loadOrDefaults();
@@ -110,7 +130,11 @@ public final class AppContext {
             new OrderService(connections, orderDAO, orderItemDAO, paymentDAO, paymentMethodDAO,
                 menuItemDAO, diningTableDAO, tableService, billingService),
             new ReceiptService(orderDAO, orderItemDAO, paymentDAO, paymentMethodDAO, menuItemDAO, userDAO),
-            paymentMethodDAO);
+            paymentMethodDAO,
+            new SupplierService(supplierDAO),
+            new InventoryService(connections, stockItemDAO, stockMovementDAO),
+            new PurchasingService(connections, supplierDAO, stockItemDAO, stockMovementDAO,
+                purchaseOrderDAO, purchaseOrderItemDAO));
         holder[0] = context;
         return context;
     }
@@ -143,6 +167,12 @@ public final class AppContext {
     public ReceiptService receiptService() { return receiptService; }
 
     public PaymentMethodDAO paymentMethodDAO() { return paymentMethodDAO; }
+
+    public SupplierService supplierService() { return supplierService; }
+
+    public InventoryService inventoryService() { return inventoryService; }
+
+    public PurchasingService purchasingService() { return purchasingService; }
 
     /** The signed-in session, or {@code null} before login / after logout. */
     public Session session() { return session; }

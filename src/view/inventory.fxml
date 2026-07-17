@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  Inventory (T063, FR-18, FR-22). On-hand is display-only here; it moves only through the
+  Adjust action, which writes a ledger movement + on-hand in one transaction (BR-21).
+-->
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx/8"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="controller.InventoryController"
+      styleClass="content" spacing="20">
+
+  <HBox alignment="CENTER_LEFT">
+    <VBox spacing="4">
+      <Label styleClass="h1,heading" text="Inventory"/>
+      <Label styleClass="greeting-sub" text="Stock on hand, reorder levels, and low-stock alerts."/>
+    </VBox>
+    <Region HBox.hgrow="ALWAYS"/>
+    <Button fx:id="lowStockButton" styleClass="qa" text="Low stock only"/>
+    <Button fx:id="allButton" styleClass="qa" text="Show all"/>
+    <Button fx:id="refreshButton" styleClass="qa" text="Refresh"/>
+  </HBox>
+
+  <Label fx:id="messageLabel" styleClass="form-error" maxWidth="Infinity"
+         wrapText="true" visible="false" managed="false"/>
+
+  <HBox spacing="20" VBox.vgrow="ALWAYS">
+    <VBox styleClass="panel" spacing="12" HBox.hgrow="ALWAYS">
+      <Label styleClass="h2" text="Stock items"/>
+      <TableView fx:id="itemTable" VBox.vgrow="ALWAYS">
+        <columns>
+          <TableColumn fx:id="nameColumn" text="Name" prefWidth="170"/>
+          <TableColumn fx:id="unitColumn" text="Unit" prefWidth="70"/>
+          <TableColumn fx:id="reorderColumn" text="Reorder" prefWidth="80"/>
+          <TableColumn fx:id="onHandColumn" text="On hand" prefWidth="80"/>
+          <TableColumn fx:id="statusColumn" text="Status" prefWidth="80"/>
+          <TableColumn fx:id="lowColumn" text="" prefWidth="50"/>
+        </columns>
+      </TableView>
+    </VBox>
+
+    <VBox spacing="20" minWidth="320" prefWidth="320">
+      <VBox styleClass="panel" spacing="14">
+        <Label fx:id="formTitle" styleClass="h2" text="New stock item"/>
+        <VBox styleClass="field-group" spacing="7">
+          <Label text="Name"/>
+          <TextField fx:id="nameField"/>
+        </VBox>
+        <VBox styleClass="field-group" spacing="7">
+          <Label text="Unit of measure"/>
+          <TextField fx:id="unitField" promptText="e.g. kg, L, each"/>
+        </VBox>
+        <VBox styleClass="field-group" spacing="7">
+          <Label text="Reorder level"/>
+          <TextField fx:id="reorderField"/>
+        </VBox>
+        <VBox styleClass="field-group" spacing="7">
+          <Label text="Opening quantity (on create)"/>
+          <TextField fx:id="openingField"/>
+        </VBox>
+        <HBox spacing="8">
+          <Button fx:id="saveButton" styleClass="btn-primary" text="Save" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
+          <Button fx:id="newButton" styleClass="qa" text="New" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
+          <Button fx:id="deactivateButton" styleClass="qa" text="Toggle active" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
+        </HBox>
+      </VBox>
+
+      <VBox styleClass="panel" spacing="14">
+        <Label styleClass="h2" text="Adjust stock"/>
+        <VBox styleClass="field-group" spacing="7">
+          <Label text="Quantity (- to remove)"/>
+          <TextField fx:id="adjustField" promptText="e.g. 5 or -2"/>
+        </VBox>
+        <Button fx:id="adjustButton" styleClass="qa" text="Apply adjustment" maxWidth="Infinity"/>
+      </VBox>
+    </VBox>
+  </HBox>
+
+</VBox>

@@ -181,23 +181,31 @@ sees low-stock items flagged, and clears the flag by receiving above the level.
 
 ### Tests for User Story 4
 
-- [ ] T053 [P] [US4] `test/service/PurchasingServiceTest.java` — atomic receive (movement + on-hand + PO line + PO status commit together; failure leaves stock and PO unchanged); received > ordered rejected (BR-24, NFR-03).
+- [x] T053 [P] [US4] `test/service/PurchasingServiceTest.java` — atomic receive (movement + on-hand + PO line + PO status commit together; failure leaves stock and PO unchanged); received > ordered rejected (BR-24, NFR-03).
 
 ### Implementation for User Story 4
 
-- [ ] T054 [P] [US4] Implement `src/dao/SupplierDAO.java` (CRUD, unique name, PO-reference check) with prepared statements.
-- [ ] T055 [P] [US4] Implement `src/dao/StockItemDAO.java` (CRUD, add-on-hand, low-stock query) with prepared statements.
-- [ ] T056 [P] [US4] Implement `src/dao/StockMovementDAO.java` (insert ledger row) with prepared statements.
-- [ ] T057 [P] [US4] Implement `src/dao/PurchaseOrderDAO.java` (CRUD, unique po_number, status update) with prepared statements.
-- [ ] T058 [P] [US4] Implement `src/dao/PurchaseOrderItemDAO.java` (lines, add-received) with prepared statements.
-- [ ] T059 [US4] Implement `src/service/SupplierService.java` — save (unique name, format-validated contacts) and deactivate-not-delete with `RbacGuard.require(MANAGE_SUPPLIERS)` (FR-19; BR-05, BR-22). (depends on T022, T054)
-- [ ] T060 [US4] Implement `src/service/InventoryService.java` — save stock item (unique name, reorder ≥ 0), deactivate with history, `adjustStock` (atomic movement + on-hand), `lowStockItems` with `RbacGuard.require(MANAGE_STOCK)` (FR-18, FR-22; BR-05, BR-21, BR-25). (depends on T017, T022, T055, T056)
-- [ ] T061 [US4] Implement `src/service/PurchasingService.java` — `createPO` (active supplier, ≥1 line, no stock change) and `receiveDelivery` (atomic per TDD §5.4: movements + on-hand + received_qty + PO status + refresh flags) with `RbacGuard.require(MANAGE_PURCHASING)` (FR-20, FR-21; BR-23, BR-24). (depends on T017, T022, T055, T056, T057, T058)
-- [ ] T062 [P] [US4] Implement `src/controller/SupplierController.java` + `src/view/suppliers.fxml` (FR-19).
-- [ ] T063 [P] [US4] Implement `src/controller/InventoryController.java` + `src/view/inventory.fxml` — stock list with low-stock flagging (FR-18, FR-22).
-- [ ] T064 [US4] Implement `src/controller/PurchasingController.java` + `src/view/purchasing.fxml` — create PO and receive delivery (FR-20, FR-21).
+- [x] T054 [P] [US4] Implement `src/dao/SupplierDAO.java` (CRUD, unique name, PO-reference check) with prepared statements.
+- [x] T055 [P] [US4] Implement `src/dao/StockItemDAO.java` (CRUD, add-on-hand, low-stock query) with prepared statements.
+- [x] T056 [P] [US4] Implement `src/dao/StockMovementDAO.java` (insert ledger row) with prepared statements.
+- [x] T057 [P] [US4] Implement `src/dao/PurchaseOrderDAO.java` (CRUD, unique po_number, status update) with prepared statements.
+- [x] T058 [P] [US4] Implement `src/dao/PurchaseOrderItemDAO.java` (lines, add-received) with prepared statements.
+- [x] T059 [US4] Implement `src/service/SupplierService.java` — save (unique name, format-validated contacts) and deactivate-not-delete with `RbacGuard.require(MANAGE_SUPPLIERS)` (FR-19; BR-05, BR-22). (depends on T022, T054)
+- [x] T060 [US4] Implement `src/service/InventoryService.java` — save stock item (unique name, reorder ≥ 0), deactivate with history, `adjustStock` (atomic movement + on-hand), `lowStockItems` with `RbacGuard.require(MANAGE_STOCK)` (FR-18, FR-22; BR-05, BR-21, BR-25). (depends on T017, T022, T055, T056)
+- [x] T061 [US4] Implement `src/service/PurchasingService.java` — `createPO` (active supplier, ≥1 line, no stock change) and `receiveDelivery` (atomic per TDD §5.4: movements + on-hand + received_qty + PO status + refresh flags) with `RbacGuard.require(MANAGE_PURCHASING)` (FR-20, FR-21; BR-23, BR-24). (depends on T017, T022, T055, T056, T057, T058)
+- [x] T062 [P] [US4] Implement `src/controller/SupplierController.java` + `src/view/suppliers.fxml` (FR-19).
+- [x] T063 [P] [US4] Implement `src/controller/InventoryController.java` + `src/view/inventory.fxml` — stock list with low-stock flagging (FR-18, FR-22).
+- [x] T064 [US4] Implement `src/controller/PurchasingController.java` + `src/view/purchasing.fxml` — create PO and receive delivery (FR-20, FR-21).
 
 **Checkpoint**: Inventory, suppliers, and purchasing work with atomic stock receipt.
+_Reached and verified end-to-end against the live DB._ A supplier and a stock item (opening 0, reorder 10)
+were created; a PO for 20 units was raised (status Ordered, on-hand unchanged, BR-23); a partial receipt of
+8 left the PO Partially Received with on-hand 8 and still low; an over-receipt of 13 (only 12 outstanding)
+was refused with stock unchanged; receiving the remaining 12 closed the PO (Received) at on-hand 20, off the
+low list; a −5 adjustment took it to 15, and a −100 adjustment was rejected by the `chk_onhand_nonneg`
+constraint and rolled back (on-hand still 15). All 76 tests pass; JavaFX-leak and prepared-statement gates
+clean. Note: `adjustStock` takes a signed quantity but stores no free-text reason — `stock_movement` has no
+such column in the schema, so the contract's `reason` parameter is intentionally omitted.
 
 ---
 
