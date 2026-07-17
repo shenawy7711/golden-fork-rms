@@ -18,7 +18,7 @@ import service.security.Permission;
 public enum Screen {
 
     // --- Operations ---
-    ORDERS("Orders", Section.OPERATIONS, Permission.CREATE_ORDER, "/view/orders.fxml", "OR", false),
+    ORDERS("Orders", Section.OPERATIONS, Permission.CREATE_ORDER, "/view/orders.fxml", "OR", true),
     TABLES("Tables", Section.OPERATIONS, Permission.UPDATE_TABLE_STATUS, "/view/tables.fxml", "TB", true),
     RESERVATIONS("Reservations", Section.OPERATIONS, Permission.MANAGE_RESERVATION, "/view/reservations.fxml", "RS", false),
 

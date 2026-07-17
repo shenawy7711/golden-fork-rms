@@ -7,12 +7,18 @@ import dao.DiningTableDAO;
 import dao.LoginEventDAO;
 import dao.MenuCategoryDAO;
 import dao.MenuItemDAO;
+import dao.OrderDAO;
+import dao.OrderItemDAO;
+import dao.PaymentDAO;
+import dao.PaymentMethodDAO;
 import dao.RoleDAO;
 import dao.SystemConfigDAO;
 import dao.UserDAO;
 import service.AuthService;
 import service.BillingService;
 import service.MenuService;
+import service.OrderService;
+import service.ReceiptService;
 import service.SystemConfigService;
 import service.TableService;
 import service.UserService;
@@ -35,6 +41,9 @@ public final class AppContext {
     private final MenuService menuService;
     private final TableService tableService;
     private final BillingService billingService;
+    private final OrderService orderService;
+    private final ReceiptService receiptService;
+    private final PaymentMethodDAO paymentMethodDAO;
 
     /**
      * The tunables in force. Not final: an administrator's FR-31 edit replaces it via
@@ -48,7 +57,9 @@ public final class AppContext {
     private AppContext(ReferenceDataLoader referenceDataLoader, AppConfig config,
                        AuthService authService, UserService userService,
                        SystemConfigService systemConfigService, MenuService menuService,
-                       TableService tableService, BillingService billingService) {
+                       TableService tableService, BillingService billingService,
+                       OrderService orderService, ReceiptService receiptService,
+                       PaymentMethodDAO paymentMethodDAO) {
         this.referenceDataLoader = referenceDataLoader;
         this.config = config;
         this.authService = authService;
@@ -57,6 +68,9 @@ public final class AppContext {
         this.menuService = menuService;
         this.tableService = tableService;
         this.billingService = billingService;
+        this.orderService = orderService;
+        this.receiptService = receiptService;
+        this.paymentMethodDAO = paymentMethodDAO;
     }
 
     /** Wires the graph from {@code config/db.properties} and the {@code system_config} table. */
@@ -70,6 +84,10 @@ public final class AppContext {
         MenuCategoryDAO menuCategoryDAO = new MenuCategoryDAO(connections);
         MenuItemDAO menuItemDAO = new MenuItemDAO(connections);
         DiningTableDAO diningTableDAO = new DiningTableDAO(connections);
+        OrderDAO orderDAO = new OrderDAO(connections);
+        OrderItemDAO orderItemDAO = new OrderItemDAO(connections);
+        PaymentDAO paymentDAO = new PaymentDAO(connections);
+        PaymentMethodDAO paymentMethodDAO = new PaymentMethodDAO(connections);
 
         ReferenceDataLoader referenceDataLoader = new ReferenceDataLoader(systemConfigDAO);
         AppConfig config = referenceDataLoader.loadOrDefaults();
@@ -78,6 +96,7 @@ public final class AppContext {
         // context field, which refreshConfig() updates.
         AppContext[] holder = new AppContext[1];
         BillingService billingService = new BillingService(() -> holder[0].config());
+        TableService tableService = new TableService(diningTableDAO);
 
         AppContext context = new AppContext(
             referenceDataLoader,
@@ -86,8 +105,12 @@ public final class AppContext {
             new UserService(userDAO, roleDAO, loginEventDAO),
             new SystemConfigService(systemConfigDAO),
             new MenuService(menuCategoryDAO, menuItemDAO),
-            new TableService(diningTableDAO),
-            billingService);
+            tableService,
+            billingService,
+            new OrderService(connections, orderDAO, orderItemDAO, paymentDAO, paymentMethodDAO,
+                menuItemDAO, diningTableDAO, tableService, billingService),
+            new ReceiptService(orderDAO, orderItemDAO, paymentDAO, paymentMethodDAO, menuItemDAO, userDAO),
+            paymentMethodDAO);
         holder[0] = context;
         return context;
     }
@@ -114,6 +137,12 @@ public final class AppContext {
     public TableService tableService() { return tableService; }
 
     public BillingService billingService() { return billingService; }
+
+    public OrderService orderService() { return orderService; }
+
+    public ReceiptService receiptService() { return receiptService; }
+
+    public PaymentMethodDAO paymentMethodDAO() { return paymentMethodDAO; }
 
     /** The signed-in session, or {@code null} before login / after logout. */
     public Session session() { return session; }

@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  Point of sale (T052, FR-10…FR-17). Order entry, live figures, payment, and receipt.
+  Every money figure shown is read back from the Order that OrderService/BillingService
+  return; the controller computes none of them (Principle III). Finalise is one atomic
+  service call (BR-19); on success the receipt PDF is written and opened (FR-16).
+-->
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx/8"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="controller.OrderController"
+      styleClass="content" spacing="20">
+
+  <HBox alignment="CENTER_LEFT">
+    <VBox spacing="4">
+      <Label styleClass="h1,heading" text="Point of Sale"/>
+      <Label styleClass="greeting-sub" text="Take an order, take payment, print the bill."/>
+    </VBox>
+    <Region HBox.hgrow="ALWAYS"/>
+    <Button fx:id="refreshButton" styleClass="qa" text="Refresh"/>
+  </HBox>
+
+  <Label fx:id="messageLabel" styleClass="form-error" maxWidth="Infinity"
+         wrapText="true" visible="false" managed="false"/>
+
+  <HBox spacing="20" VBox.vgrow="ALWAYS">
+
+    <!-- Start / resume an order -->
+    <VBox spacing="20" minWidth="260" prefWidth="260">
+      <VBox styleClass="panel" spacing="12">
+        <Label styleClass="h2" text="New order"/>
+        <VBox styleClass="field-group" spacing="7">
+          <Label text="Type"/>
+          <ComboBox fx:id="typeCombo" maxWidth="Infinity"/>
+        </VBox>
+        <VBox styleClass="field-group" spacing="7">
+          <Label text="Table (dine-in)"/>
+          <ComboBox fx:id="tableCombo" maxWidth="Infinity"/>
+        </VBox>
+        <Button fx:id="openButton" styleClass="btn-primary" text="Open order" maxWidth="Infinity"/>
+      </VBox>
+
+      <VBox styleClass="panel" spacing="12" VBox.vgrow="ALWAYS">
+        <Label styleClass="h2" text="Open orders"/>
+        <ListView fx:id="openOrdersList" VBox.vgrow="ALWAYS"/>
+        <Button fx:id="resumeButton" styleClass="qa" text="Resume selected" maxWidth="Infinity"/>
+      </VBox>
+    </VBox>
+
+    <!-- Menu + current order lines -->
+    <VBox styleClass="panel" spacing="12" HBox.hgrow="ALWAYS">
+      <Label fx:id="orderHeader" styleClass="h2" text="No order open"/>
+
+      <HBox spacing="16" VBox.vgrow="ALWAYS">
+        <VBox spacing="8" minWidth="240" prefWidth="240">
+          <Label styleClass="hint" text="Menu (available items)"/>
+          <ListView fx:id="itemsList" VBox.vgrow="ALWAYS"/>
+          <HBox spacing="8" alignment="CENTER_LEFT">
+            <TextField fx:id="quantityField" promptText="Qty" prefWidth="70"/>
+            <Button fx:id="addButton" styleClass="btn-primary" text="Add" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+          </HBox>
+        </VBox>
+
+        <VBox spacing="8" HBox.hgrow="ALWAYS">
+          <Label styleClass="hint" text="Order lines"/>
+          <TableView fx:id="linesTable" VBox.vgrow="ALWAYS">
+            <columns>
+              <TableColumn fx:id="lineNameColumn" text="Item" prefWidth="180"/>
+              <TableColumn fx:id="lineQtyColumn" text="Qty" prefWidth="50"/>
+              <TableColumn fx:id="linePriceColumn" text="Unit" prefWidth="80"/>
+              <TableColumn fx:id="lineTotalColumn" text="Line" prefWidth="90"/>
+            </columns>
+          </TableView>
+          <Button fx:id="removeLineButton" styleClass="qa" text="Remove selected line"/>
+        </VBox>
+      </HBox>
+    </VBox>
+
+    <!-- Discount, totals, payment -->
+    <VBox spacing="20" minWidth="300" prefWidth="300">
+      <VBox styleClass="panel" spacing="12">
+        <Label styleClass="h2" text="Discount"/>
+        <VBox styleClass="field-group" spacing="7">
+          <Label text="Type"/>
+          <ComboBox fx:id="discountTypeCombo" maxWidth="Infinity"/>
+        </VBox>
+        <VBox styleClass="field-group" spacing="7">
+          <Label text="Value (% or amount)"/>
+          <TextField fx:id="discountValueField" promptText="e.g. 10"/>
+        </VBox>
+        <Button fx:id="applyDiscountButton" styleClass="qa" text="Apply discount" maxWidth="Infinity"/>
+      </VBox>
+
+      <VBox styleClass="panel" spacing="10">
+        <Label styleClass="h2" text="Bill"/>
+        <HBox>
+          <Label text="Subtotal"/>
+          <Region HBox.hgrow="ALWAYS"/>
+          <Label fx:id="subtotalLabel" text="0.00"/>
+        </HBox>
+        <HBox>
+          <Label text="Discount"/>
+          <Region HBox.hgrow="ALWAYS"/>
+          <Label fx:id="discountLabel" text="0.00"/>
+        </HBox>
+        <HBox>
+          <Label fx:id="taxLabel" text="Tax: 0.00"/>
+        </HBox>
+        <HBox>
+          <Label styleClass="h2" text="Total"/>
+          <Region HBox.hgrow="ALWAYS"/>
+          <Label fx:id="totalLabel" styleClass="h2" text="0.00"/>
+        </HBox>
+      </VBox>
+
+      <VBox styleClass="panel" spacing="12">
+        <Label styleClass="h2" text="Payment"/>
+        <VBox styleClass="field-group" spacing="7">
+          <Label text="Method"/>
+          <ComboBox fx:id="methodCombo" maxWidth="Infinity"/>
+        </VBox>
+        <VBox styleClass="field-group" spacing="7">
+          <Label text="Amount tendered (cash)"/>
+          <TextField fx:id="tenderedField" promptText="optional"/>
+        </VBox>
+        <Button fx:id="finaliseButton" styleClass="btn-primary" text="Take payment &amp; print" maxWidth="Infinity"/>
+        <Button fx:id="voidButton" styleClass="qa" text="Void order" maxWidth="Infinity"/>
+      </VBox>
+    </VBox>
+
+  </HBox>
+
+</VBox>
