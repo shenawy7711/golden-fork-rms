@@ -59,9 +59,18 @@
       <version>${junit.version}</version>
       <scope>test</scope>
     </dependency>
+    <!-- mockito-inline (not -core): the DAOs and services are final classes per the codebase's
+         convention, and only the inline mock maker can mock those. It pulls in mockito-core. -->
     <dependency>
       <groupId>org.mockito</groupId>
-      <artifactId>mockito-core</artifactId>
+      <artifactId>mockito-inline</artifactId>
+      <version>${mockito.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- @ExtendWith(MockitoExtension.class) — the JUnit 5 integration lives in its own artifact. -->
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-junit-jupiter</artifactId>
       <version>${mockito.version}</version>
       <scope>test</scope>
     </dependency>

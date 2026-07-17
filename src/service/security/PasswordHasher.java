@@ -11,7 +11,20 @@ public final class PasswordHasher {
 
     private static final int COST = 10;
 
+    // A real hash of a throwaway value, computed once. AuthService verifies against this when the
+    // username is unknown so that a failed sign-in costs the same either way — returning early
+    // without hashing is measurably faster and reveals which usernames exist.
+    private static final String DUMMY_HASH = BCrypt.hashpw("no-such-account", BCrypt.gensalt(COST));
+
     private PasswordHasher() {}
+
+    /**
+     * A valid BCrypt hash that no supplied password will match. Used to keep the cost of a failed
+     * sign-in constant; never stored against an account.
+     */
+    public static String dummyHash() {
+        return DUMMY_HASH;
+    }
 
     /** Returns a salted BCrypt hash of the plaintext password. */
     public static String hash(String plaintext) {

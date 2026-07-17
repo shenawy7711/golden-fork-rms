@@ -13,6 +13,16 @@ public final class Validation {
     private static final Pattern EMAIL = Pattern.compile("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$");
     private static final Pattern PHONE = Pattern.compile("^[+]?[0-9 ()\\-]{6,30}$");
 
+    private static final Pattern HAS_LETTER = Pattern.compile(".*[A-Za-z].*");
+    private static final Pattern HAS_DIGIT = Pattern.compile(".*[0-9].*");
+
+    /** Appendix A: password minimum length. */
+    public static final int PASSWORD_MIN_LENGTH = 8;
+
+    /** The message shown when {@link #isValidPassword} fails (Appendix A: "reject with policy hint"). */
+    public static final String PASSWORD_POLICY_HINT =
+        "Password must be at least " + PASSWORD_MIN_LENGTH + " characters and include a letter and a digit.";
+
     private Validation() {}
 
     public static boolean isBlank(String s) {
@@ -24,6 +34,20 @@ public final class Validation {
         if (s == null) return false;
         int n = s.trim().length();
         return n >= min && n <= max;
+    }
+
+    /**
+     * Appendix A password policy: at least {@value #PASSWORD_MIN_LENGTH} characters, with at least
+     * one letter and one digit.
+     *
+     * <p>Not trimmed — leading/trailing spaces are legitimate password characters, and trimming
+     * here would silently accept a password that then fails to verify at login.
+     */
+    public static boolean isValidPassword(String password) {
+        return password != null
+            && password.length() >= PASSWORD_MIN_LENGTH
+            && HAS_LETTER.matcher(password).matches()
+            && HAS_DIGIT.matcher(password).matches();
     }
 
     public static boolean isValidEmail(String s) {
