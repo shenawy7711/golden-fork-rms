@@ -10,8 +10,33 @@ producing management reports.
 
 ## Status
 
-Specification & design phase. This repository currently holds the requirements, design, and
-Spec Kit artifacts; application code follows.
+**Phase 1 implementation complete.** All six user stories are built on a strict layered core
+(View → Controller → Service → DAO → MySQL) with the money engine, RBAC, and transactional
+integrity enforced in the business layer. See `specs/001-golden-fork-rms/tasks.md` for the
+task-by-task record.
+
+## Build & run
+
+Full instructions, database setup, and the acceptance walkthroughs live in
+[`specs/001-golden-fork-rms/quickstart.md`](specs/001-golden-fork-rms/quickstart.md). In short:
+
+```bash
+# 1. Prerequisites: Full JDK 8 (with JavaFX), Maven, MySQL 8 on localhost:3306.
+# 2. Create the database (once):
+mysql -u root -p rms < db/schema.sql
+mysql -u root -p rms < db/seed.sql
+#    Then apply any migrations in db/migrations/ in order (e.g. 001, 002).
+# 3. Configure credentials: copy config/db.properties and set db.user / db.password.
+# 4. Build and test:
+mvn test
+# 5. Run the desktop app:
+mvn exec:java
+```
+
+Default first login is `admin` / `admin123` (change it after first sign-in). The JavaFX-free
+service/DAO/domain/util core is exercised by the JUnit suite; the constitution gates
+(`grep -rn "import javafx" src/service src/dao src/domain src/util` returns nothing;
+DAOs use prepared statements only) hold.
 
 ## Scope
 

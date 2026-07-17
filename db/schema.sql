@@ -135,6 +135,8 @@ CREATE TABLE `orders` (
   UNIQUE KEY `order_number` (`order_number`),
   KEY `table_id` (`table_id`),
   KEY `created_by` (`created_by`),
+  KEY `idx_orders_status_closed` (`status`, `closed_at`),
+  KEY `idx_orders_created` (`created_at`),
   CONSTRAINT `orders_ibfk_1` FOREIGN KEY (`table_id`) REFERENCES `dining_table` (`table_id`),
   CONSTRAINT `orders_ibfk_2` FOREIGN KEY (`created_by`) REFERENCES `user_account` (`user_id`),
   CONSTRAINT `chk_discount_nonneg` CHECK ((`discount_amount` >= 0)),

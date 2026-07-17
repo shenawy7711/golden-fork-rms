@@ -273,11 +273,11 @@ inverted date range was refused. All 86 tests pass; JavaFX-leak and prepared-sta
 **Purpose**: Cross-cutting guarantees and final validation.
 
 - [x] T075 Wire the idle-timeout auto-logout (default 15 min from `system_config`) into the app shell/session (FR-04 edge case). _(`app/IdleTimer` — a `PauseTransition` reset by any mouse/key event on the scene; `Navigator` starts it on `showDashboard`, stops it on `showAuth`, and on timeout records the LOGOUT (best-effort), returns to login, and shows an inactivity notice. A non-positive configured value is clamped to 15 so the guard can't be disabled by a bad config row.)_
-- [ ] T076 Verify the JavaFX-leak gate: `grep -rn "javafx" src/service src/dao src/domain src/util` returns nothing (Principle I).
-- [ ] T077 [P] Audit all `src/dao/*` for parameterised prepared statements only — no string-concatenated SQL (Principle VII).
-- [ ] T078 [P] Verify `db/schema.sql` indexes on FKs and lookup columns support the NFR-02 ~2-second targets; add any missing indexes.
-- [ ] T079 [P] Add a project `README.md` build/run section referencing `quickstart.md`.
-- [ ] T080 Run the `quickstart.md` acceptance walkthroughs (all six) and confirm SC-001…SC-010 hold (including SC-010: reference/system data is Administrator-only, audited, and never alters a finalised bill — FR-31).
+- [x] T076 Verify the JavaFX-leak gate: `grep -rn "javafx" src/service src/dao src/domain src/util` returns nothing (Principle I).
+- [x] T077 [P] Audit all `src/dao/*` for parameterised prepared statements only — no string-concatenated SQL (Principle VII).
+- [x] T078 [P] Verify `db/schema.sql` indexes on FKs and lookup columns support the NFR-02 ~2-second targets; add any missing indexes.
+- [x] T079 [P] Add a project `README.md` build/run section referencing `quickstart.md`.
+- [x] T080 Run the `quickstart.md` acceptance walkthroughs (all six) and confirm SC-001…SC-010 hold (including SC-010: reference/system data is Administrator-only, audited, and never alters a finalised bill — FR-31).
 
 ---
 
