@@ -76,6 +76,7 @@ public final class ReservationController implements ContextAware {
             c.getValue().getReservationDatetime() == null ? "" : WHEN.format(c.getValue().getReservationDatetime())));
         partyColumn.setCellValueFactory(c -> new SimpleStringProperty(String.valueOf(c.getValue().getPartySize())));
         statusColumn.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getStatus().dbValue()));
+        StatusPill.apply(statusColumn);
         reservationTable.setItems(reservations);
 
         createButton.setOnAction(e -> create());

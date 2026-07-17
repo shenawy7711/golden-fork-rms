@@ -53,6 +53,7 @@ public final class SupplierController implements ContextAware {
         phoneColumn.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getPhone()));
         emailColumn.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getEmail()));
         statusColumn.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getStatus().dbValue()));
+        StatusPill.apply(statusColumn);
         supplierTable.setItems(suppliers);
 
         supplierTable.getSelectionModel().selectedItemProperty()

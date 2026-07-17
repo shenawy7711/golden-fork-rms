@@ -64,7 +64,9 @@ public final class InventoryController implements ContextAware {
         reorderColumn.setCellValueFactory(c -> new SimpleStringProperty(plain(c.getValue().getReorderLevel())));
         onHandColumn.setCellValueFactory(c -> new SimpleStringProperty(plain(c.getValue().getQuantityOnHand())));
         statusColumn.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getStatus().dbValue()));
-        lowColumn.setCellValueFactory(c -> new SimpleStringProperty(isLow(c.getValue()) ? "LOW" : ""));
+        lowColumn.setCellValueFactory(c -> new SimpleStringProperty(isLow(c.getValue()) ? "Low" : ""));
+        StatusPill.apply(statusColumn);
+        StatusPill.apply(lowColumn);
         itemTable.setItems(items);
 
         itemTable.getSelectionModel().selectedItemProperty()

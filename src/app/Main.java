@@ -22,6 +22,7 @@ public final class Main extends Application {
 
     @Override
     public void start(Stage stage) {
+        Fonts.load();
         AppContext context;
         try {
             context = AppContext.bootstrap();

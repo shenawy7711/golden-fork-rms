@@ -72,6 +72,7 @@ public final class TableController implements ContextAware {
             String.valueOf(cell.getValue().getCapacity())));
         statusColumn.setCellValueFactory(cell -> new SimpleStringProperty(
             cell.getValue().getStatus().dbValue()));
+        StatusPill.apply(statusColumn);
         tableView.setItems(tables);
         statusCombo.setItems(nextStatuses);
 
