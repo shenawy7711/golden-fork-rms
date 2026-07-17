@@ -3,12 +3,17 @@ package app;
 import config.AppConfig;
 import config.ReferenceDataLoader;
 import dao.ConnectionFactory;
+import dao.DiningTableDAO;
 import dao.LoginEventDAO;
+import dao.MenuCategoryDAO;
+import dao.MenuItemDAO;
 import dao.RoleDAO;
 import dao.SystemConfigDAO;
 import dao.UserDAO;
 import service.AuthService;
+import service.MenuService;
 import service.SystemConfigService;
+import service.TableService;
 import service.UserService;
 import service.security.Session;
 
@@ -26,15 +31,20 @@ public final class AppContext {
     private final AuthService authService;
     private final UserService userService;
     private final SystemConfigService systemConfigService;
+    private final MenuService menuService;
+    private final TableService tableService;
 
     private Session session;
 
     private AppContext(AppConfig config, AuthService authService, UserService userService,
-                       SystemConfigService systemConfigService) {
+                       SystemConfigService systemConfigService, MenuService menuService,
+                       TableService tableService) {
         this.config = config;
         this.authService = authService;
         this.userService = userService;
         this.systemConfigService = systemConfigService;
+        this.menuService = menuService;
+        this.tableService = tableService;
     }
 
     /** Wires the graph from {@code config/db.properties} and the {@code system_config} table. */
@@ -45,6 +55,9 @@ public final class AppContext {
         UserDAO userDAO = new UserDAO(connections);
         LoginEventDAO loginEventDAO = new LoginEventDAO(connections);
         SystemConfigDAO systemConfigDAO = new SystemConfigDAO(connections);
+        MenuCategoryDAO menuCategoryDAO = new MenuCategoryDAO(connections);
+        MenuItemDAO menuItemDAO = new MenuItemDAO(connections);
+        DiningTableDAO diningTableDAO = new DiningTableDAO(connections);
 
         AppConfig config = new ReferenceDataLoader(systemConfigDAO).loadOrDefaults();
 
@@ -52,7 +65,9 @@ public final class AppContext {
             config,
             new AuthService(userDAO, loginEventDAO, config.loginMaxAttempts()),
             new UserService(userDAO, roleDAO, loginEventDAO),
-            new SystemConfigService(systemConfigDAO));
+            new SystemConfigService(systemConfigDAO),
+            new MenuService(menuCategoryDAO, menuItemDAO),
+            new TableService(diningTableDAO));
     }
 
     public AppConfig config() { return config; }
@@ -62,6 +77,10 @@ public final class AppContext {
     public UserService userService() { return userService; }
 
     public SystemConfigService systemConfigService() { return systemConfigService; }
+
+    public MenuService menuService() { return menuService; }
+
+    public TableService tableService() { return tableService; }
 
     /** The signed-in session, or {@code null} before login / after logout. */
     public Session session() { return session; }

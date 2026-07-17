@@ -112,17 +112,26 @@ orders are taken against accurate information.
 immediately order it; marks it Unavailable (leaves ordering, keeps history); defines a
 uniquely-labelled table with capacity; table status moves only through allowed transitions.
 
+### Tests for User Story 3
+
+- [x] T038a [P] [US3] `test/service/TableServiceTest.java` — the table state machine (BR-12) as data-model.md §Table defines it. Asserts the full 4×4 grid, not samples: the rule is "only defined transitions are allowed", so rejections carry equal weight. Notably `Occupied → Free` is illegal (must pass through Needs Cleaning, FR-17). _(8 tests, passing. Not constitution-mandated — added because the state machine is pure logic and cheap to pin down.)_
+
 ### Implementation for User Story 3
 
-- [ ] T036 [P] [US3] Implement `src/dao/MenuCategoryDAO.java` (CRUD, count items in category) with prepared statements.
-- [ ] T037 [P] [US3] Implement `src/dao/MenuItemDAO.java` (CRUD, unique-within-category, list orderable) with prepared statements.
-- [ ] T038 [P] [US3] Implement `src/dao/DiningTableDAO.java` (CRUD, status update, existence of open order/reservation) with prepared statements.
-- [ ] T039 [US3] Implement `src/service/MenuService.java` — categories (unique name, block delete of non-empty) and items (price ≥ 0, unique-in-category, availability toggle, soft-delete with history) with `RbacGuard.require(MANAGE_MENU)` (FR-05, FR-06, FR-07; BR-08, BR-09, BR-10). (depends on T022, T036, T037)
-- [ ] T040 [US3] Implement `src/service/TableService.java` — `defineTable` (unique label, capacity ≥ 1), `deleteTable` (only when free/un-booked), `changeStatus` validating the table state machine (FR-08, FR-09; BR-11, BR-12). (depends on T022, T038)
-- [ ] T041 [US3] Implement `src/controller/MenuController.java` + `src/view/menu.fxml` — categories/items/price/availability management (FR-05…FR-07).
-- [ ] T042 [US3] Implement `src/controller/TableController.java` + `src/view/tables.fxml` — table definition + live status board with the status color helpers from `app.css` (FR-08, FR-09).
+- [x] T036 [P] [US3] Implement `src/dao/MenuCategoryDAO.java` (CRUD, count items in category) with prepared statements.
+- [x] T037 [P] [US3] Implement `src/dao/MenuItemDAO.java` (CRUD, unique-within-category, list orderable) with prepared statements.
+- [x] T038 [P] [US3] Implement `src/dao/DiningTableDAO.java` (CRUD, status update, existence of open order/reservation) with prepared statements. _(A "future reservation" counts only Booked/Seated bookings — a Cancelled/Completed/No-Show one holds nothing and must not block a delete.)_
+- [x] T039 [US3] Implement `src/service/MenuService.java` — categories (unique name, block delete of non-empty) and items (price ≥ 0, unique-in-category, availability toggle, soft-delete with history) with `RbacGuard.require(MANAGE_MENU)` (FR-05, FR-06, FR-07; BR-08, BR-09, BR-10). (depends on T022, T036, T037)
+- [x] T040 [US3] Implement `src/service/TableService.java` — `defineTable` (unique label, capacity ≥ 1), `deleteTable` (only when free/un-booked), `changeStatus` validating the table state machine (FR-08, FR-09; BR-11, BR-12). (depends on T022, T038)
+- [x] T041 [US3] Implement `src/controller/MenuController.java` + `src/view/menu.fxml` — categories/items/price/availability management (FR-05…FR-07). _(Deleting an item that appears on past orders soft-deletes it to Unavailable and says so, rather than refusing (BR-10).)_
+- [x] T042 [US3] Implement `src/controller/TableController.java` + `src/view/tables.fxml` — table definition + live status board with the status color helpers from `app.css` (FR-08, FR-09). _(The status dropdown offers only legal transitions from the table's current state; `TableService` re-validates regardless (BR-12).)_
 
 **Checkpoint**: Menu and tables are manageable and feed the POS.
+_Reached, with a caveat._ Both screens load, compile, and are wired into the nav; all 40 tests pass and
+both constitution gates (Principle I JavaFX-leak, Principle VII prepared-statements) are clean.
+**Not yet exercised against live data** — no categories, items, or tables exist in the DB yet, so the
+CRUD paths have not been driven end-to-end. Creating that data unattended would have written test rows
+into your database; it is the natural first thing to do when you next open the app.
 
 ---
 

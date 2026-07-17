@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  Tables (T042, FR-08, FR-09). Defining/deleting needs DEFINE_TABLES (Manager/Admin);
+  changing a status needs UPDATE_TABLE_STATUS, which every role holds. The status board
+  colours come from the .st-* helpers in app.css; TableService enforces the state
+  machine (BR-12), so an illegal move is refused here as it is anywhere else.
+-->
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx/8"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="controller.TableController"
+      styleClass="content" spacing="20">
+
+  <HBox alignment="CENTER_LEFT">
+    <VBox spacing="4">
+      <Label styleClass="h1,heading" text="Tables"/>
+      <Label styleClass="greeting-sub" text="The floor right now, and the layout behind it."/>
+    </VBox>
+    <Region HBox.hgrow="ALWAYS"/>
+    <Button fx:id="refreshButton" styleClass="qa" text="Refresh"/>
+  </HBox>
+
+  <Label fx:id="messageLabel" styleClass="form-error" maxWidth="Infinity"
+         wrapText="true" visible="false" managed="false"/>
+
+  <!-- Live status board -->
+  <VBox styleClass="panel" spacing="12">
+    <HBox alignment="CENTER_LEFT" spacing="16">
+      <Label styleClass="h2" text="Floor"/>
+      <Region HBox.hgrow="ALWAYS"/>
+      <HBox spacing="6" alignment="CENTER_LEFT">
+        <Label styleClass="st-free" text="●"/><Label styleClass="hint" text="Free"/>
+        <Label styleClass="st-occupied" text="●"/><Label styleClass="hint" text="Occupied"/>
+        <Label styleClass="st-reserved" text="●"/><Label styleClass="hint" text="Reserved"/>
+        <Label styleClass="st-cleaning" text="●"/><Label styleClass="hint" text="Needs cleaning"/>
+      </HBox>
+    </HBox>
+    <ScrollPane fitToWidth="true" prefHeight="180" hbarPolicy="NEVER"
+                style="-fx-background-color: transparent;">
+      <FlowPane fx:id="floorPane" hgap="12" vgap="12"/>
+    </ScrollPane>
+  </VBox>
+
+  <HBox spacing="20" VBox.vgrow="ALWAYS">
+
+    <!-- Layout -->
+    <VBox styleClass="panel" spacing="12" HBox.hgrow="ALWAYS">
+      <Label styleClass="h2" text="Layout"/>
+      <TableView fx:id="tableView" VBox.vgrow="ALWAYS">
+        <columns>
+          <TableColumn fx:id="labelColumn" text="Label" prefWidth="100"/>
+          <TableColumn fx:id="capacityColumn" text="Capacity" prefWidth="100"/>
+          <TableColumn fx:id="statusColumn" text="Status" prefWidth="150"/>
+        </columns>
+      </TableView>
+    </VBox>
+
+    <!-- Define / status -->
+    <VBox spacing="20" minWidth="320" prefWidth="320">
+
+      <VBox styleClass="panel" spacing="14">
+        <Label fx:id="formTitle" styleClass="h2" text="New table"/>
+        <VBox styleClass="field-group" spacing="7">
+          <Label text="Label"/>
+          <TextField fx:id="labelField" promptText="e.g. T1"/>
+        </VBox>
+        <VBox styleClass="field-group" spacing="7">
+          <Label text="Capacity"/>
+          <TextField fx:id="capacityField" promptText="seats (≥ 1)"/>
+        </VBox>
+        <HBox spacing="8">
+          <Button fx:id="saveButton" styleClass="btn-primary" text="Save"
+                  maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
+          <Button fx:id="newButton" styleClass="qa" text="New" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
+          <Button fx:id="deleteButton" styleClass="qa" text="Delete" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
+        </HBox>
+      </VBox>
+
+      <VBox styleClass="panel" spacing="14">
+        <Label styleClass="h2" text="Change status"/>
+        <VBox styleClass="field-group" spacing="7">
+          <Label text="New status"/>
+          <ComboBox fx:id="statusCombo" maxWidth="Infinity"/>
+          <Label fx:id="statusHint" styleClass="hint" wrapText="true"
+                 text="Select a table to see where it can go next."/>
+        </VBox>
+        <Button fx:id="changeStatusButton" styleClass="qa" text="Apply status" maxWidth="Infinity"/>
+      </VBox>
+
+    </VBox>
+
+  </HBox>
+
+</VBox>

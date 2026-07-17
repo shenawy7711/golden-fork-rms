@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  Menu & prices (T041, FR-05…FR-07). Requires MANAGE_MENU; MenuService re-checks on every
+  call (BR-03). Price edits apply to future orders only — finalised bills are never
+  re-priced (BR-09), because each order line holds its own unit-price snapshot.
+-->
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx/8"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="controller.MenuController"
+      styleClass="content" spacing="20">
+
+  <HBox alignment="CENTER_LEFT">
+    <VBox spacing="4">
+      <Label styleClass="h1,heading" text="Menu &amp; prices"/>
+      <Label styleClass="greeting-sub" text="Categories, items, prices, and what the POS can sell."/>
+    </VBox>
+    <Region HBox.hgrow="ALWAYS"/>
+    <Button fx:id="refreshButton" styleClass="qa" text="Refresh"/>
+  </HBox>
+
+  <Label fx:id="messageLabel" styleClass="form-error" maxWidth="Infinity"
+         wrapText="true" visible="false" managed="false"/>
+
+  <HBox spacing="20" VBox.vgrow="ALWAYS">
+
+    <!-- Categories -->
+    <VBox styleClass="panel" spacing="12" minWidth="260" prefWidth="260">
+      <Label styleClass="h2" text="Categories"/>
+      <TableView fx:id="categoryTable" VBox.vgrow="ALWAYS">
+        <columns>
+          <TableColumn fx:id="categoryNameColumn" text="Name" prefWidth="140"/>
+          <TableColumn fx:id="categoryOrderColumn" text="Order" prefWidth="60"/>
+        </columns>
+      </TableView>
+      <VBox styleClass="field-group" spacing="7">
+        <Label text="Name"/>
+        <TextField fx:id="categoryNameField" promptText="2–50 characters"/>
+      </VBox>
+      <VBox styleClass="field-group" spacing="7">
+        <Label text="Display order"/>
+        <TextField fx:id="categoryOrderField" promptText="optional"/>
+      </VBox>
+      <HBox spacing="8">
+        <Button fx:id="saveCategoryButton" styleClass="qa" text="Save" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
+        <Button fx:id="newCategoryButton" styleClass="qa" text="New" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
+        <Button fx:id="deleteCategoryButton" styleClass="qa" text="Delete" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
+      </HBox>
+    </VBox>
+
+    <!-- Items -->
+    <VBox styleClass="panel" spacing="12" HBox.hgrow="ALWAYS">
+      <HBox alignment="CENTER_LEFT" spacing="10">
+        <Label styleClass="h2" text="Items"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Label fx:id="itemFilterLabel" styleClass="hint" text="All categories"/>
+      </HBox>
+      <TableView fx:id="itemTable" VBox.vgrow="ALWAYS">
+        <columns>
+          <TableColumn fx:id="itemNameColumn" text="Item" prefWidth="180"/>
+          <TableColumn fx:id="itemCategoryColumn" text="Category" prefWidth="130"/>
+          <TableColumn fx:id="itemPriceColumn" text="Price" prefWidth="90"/>
+          <TableColumn fx:id="itemAvailabilityColumn" text="Availability" prefWidth="110"/>
+        </columns>
+      </TableView>
+      <HBox spacing="10">
+        <Button fx:id="toggleAvailabilityButton" styleClass="qa" text="Toggle availability"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button fx:id="deleteItemButton" styleClass="qa" text="Delete item"/>
+      </HBox>
+    </VBox>
+
+    <!-- Item editor -->
+    <VBox styleClass="panel" spacing="14" minWidth="300" prefWidth="300">
+      <Label fx:id="itemFormTitle" styleClass="h2" text="New item"/>
+
+      <VBox styleClass="field-group" spacing="7">
+        <Label text="Name"/>
+        <TextField fx:id="itemNameField" promptText="2–80 characters"/>
+      </VBox>
+
+      <VBox styleClass="field-group" spacing="7">
+        <Label text="Category"/>
+        <ComboBox fx:id="itemCategoryCombo" maxWidth="Infinity"/>
+      </VBox>
+
+      <VBox styleClass="field-group" spacing="7">
+        <Label text="Price"/>
+        <TextField fx:id="itemPriceField" promptText="0.00"/>
+      </VBox>
+
+      <VBox styleClass="field-group" spacing="7">
+        <Label text="Availability"/>
+        <ComboBox fx:id="itemAvailabilityCombo" maxWidth="Infinity"/>
+      </VBox>
+
+      <VBox styleClass="field-group" spacing="7">
+        <Label text="Description"/>
+        <TextArea fx:id="itemDescriptionField" prefRowCount="3" wrapText="true"
+                  promptText="Up to 255 characters (optional)"/>
+      </VBox>
+
+      <Region VBox.vgrow="ALWAYS"/>
+
+      <HBox spacing="8">
+        <Button fx:id="saveItemButton" styleClass="btn-primary" text="Save item"
+                maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
+        <Button fx:id="newItemButton" styleClass="qa" text="New" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
+      </HBox>
+    </VBox>
+
+  </HBox>
+
+</VBox>

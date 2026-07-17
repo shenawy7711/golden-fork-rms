@@ -19,11 +19,11 @@ public enum Screen {
 
     // --- Operations ---
     ORDERS("Orders", Section.OPERATIONS, Permission.CREATE_ORDER, "/view/orders.fxml", "OR", false),
-    TABLES("Tables", Section.OPERATIONS, Permission.UPDATE_TABLE_STATUS, "/view/tables.fxml", "TB", false),
+    TABLES("Tables", Section.OPERATIONS, Permission.UPDATE_TABLE_STATUS, "/view/tables.fxml", "TB", true),
     RESERVATIONS("Reservations", Section.OPERATIONS, Permission.MANAGE_RESERVATION, "/view/reservations.fxml", "RS", false),
 
     // --- Management ---
-    MENU("Menu", Section.MANAGEMENT, Permission.MANAGE_MENU, "/view/menu.fxml", "MN", false),
+    MENU("Menu", Section.MANAGEMENT, Permission.MANAGE_MENU, "/view/menu.fxml", "MN", true),
     INVENTORY("Inventory", Section.MANAGEMENT, Permission.MANAGE_STOCK, "/view/inventory.fxml", "IN", false),
     SUPPLIERS("Suppliers", Section.MANAGEMENT, Permission.MANAGE_SUPPLIERS, "/view/suppliers.fxml", "SP", false),
     PURCHASING("Purchasing", Section.MANAGEMENT, Permission.MANAGE_PURCHASING, "/view/purchasing.fxml", "PO", false),
