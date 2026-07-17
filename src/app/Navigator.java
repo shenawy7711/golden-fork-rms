@@ -3,6 +3,7 @@ package app;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
@@ -30,6 +31,7 @@ public final class Navigator {
 
     private Scene scene;
     private DashboardHost dashboardHost;
+    private IdleTimer idleTimer;
 
     public Navigator(Stage stage, AppContext context) {
         this.stage = stage;
@@ -38,6 +40,7 @@ public final class Navigator {
 
     /** Shows the login screen, discarding any dashboard and its session (FR-01). */
     public void showAuth() {
+        stopIdleTimer();
         context.setSession(null);
         dashboardHost = null;
         setRoot(load(AUTH_FXML));
@@ -47,6 +50,43 @@ public final class Navigator {
     public void showDashboard() {
         Parent dashboard = load(DASHBOARD_FXML);
         setRoot(dashboard);
+        startIdleTimer();
+    }
+
+    /**
+     * Starts the inactivity auto-logout for the signed-in session (FR-04). The window comes from
+     * {@code idle_timeout_min} in {@code system_config} (default 15). On timeout the session ends and
+     * the login screen returns with a notice.
+     */
+    private void startIdleTimer() {
+        stopIdleTimer();
+        idleTimer = new IdleTimer(scene, context.config().idleTimeoutMinutes(), this::onIdleTimeout);
+        idleTimer.start();
+    }
+
+    private void stopIdleTimer() {
+        if (idleTimer != null) {
+            idleTimer.stop();
+            idleTimer = null;
+        }
+    }
+
+    private void onIdleTimeout() {
+        // Record the logout when we can; an idle sign-out must proceed even if that write fails, so
+        // the session never lingers after the timeout.
+        try {
+            if (context.session() != null) {
+                context.authService().logout(context.session());
+            }
+        } catch (RuntimeException ignored) {
+            // e.g. an unsaved open order blocks a clean logout — the auto-logout still proceeds.
+        }
+        showAuth();
+        Alert notice = new Alert(Alert.AlertType.INFORMATION,
+            "You were signed out after a period of inactivity.");
+        notice.setTitle("Golden Fork RMS");
+        notice.setHeaderText("Session ended");
+        notice.show();
     }
 
     /**
