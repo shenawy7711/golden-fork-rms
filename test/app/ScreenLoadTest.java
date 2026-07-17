@@ -100,6 +100,18 @@ class ScreenLoadTest {
     }
 
     @Test
+    @DisplayName("staff.fxml (T070)")
+    void staffLoads() throws Exception {
+        assertLoads("/view/staff.fxml");
+    }
+
+    @Test
+    @DisplayName("reservations.fxml (T071)")
+    void reservationsLoads() throws Exception {
+        assertLoads("/view/reservations.fxml");
+    }
+
+    @Test
     @DisplayName("app.css is on the classpath where Navigator expects it (T003)")
     void stylesheetIsPresent() {
         assertNotNull(ScreenLoadTest.class.getResource("/view/css/app.css"),

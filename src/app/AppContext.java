@@ -13,7 +13,9 @@ import dao.PaymentDAO;
 import dao.PaymentMethodDAO;
 import dao.PurchaseOrderDAO;
 import dao.PurchaseOrderItemDAO;
+import dao.ReservationDAO;
 import dao.RoleDAO;
+import dao.StaffDAO;
 import dao.StockItemDAO;
 import dao.StockMovementDAO;
 import dao.SupplierDAO;
@@ -26,6 +28,8 @@ import service.MenuService;
 import service.OrderService;
 import service.PurchasingService;
 import service.ReceiptService;
+import service.ReservationService;
+import service.StaffService;
 import service.SupplierService;
 import service.SystemConfigService;
 import service.TableService;
@@ -55,6 +59,8 @@ public final class AppContext {
     private final SupplierService supplierService;
     private final InventoryService inventoryService;
     private final PurchasingService purchasingService;
+    private final StaffService staffService;
+    private final ReservationService reservationService;
 
     /**
      * The tunables in force. Not final: an administrator's FR-31 edit replaces it via
@@ -71,7 +77,8 @@ public final class AppContext {
                        TableService tableService, BillingService billingService,
                        OrderService orderService, ReceiptService receiptService,
                        PaymentMethodDAO paymentMethodDAO, SupplierService supplierService,
-                       InventoryService inventoryService, PurchasingService purchasingService) {
+                       InventoryService inventoryService, PurchasingService purchasingService,
+                       StaffService staffService, ReservationService reservationService) {
         this.referenceDataLoader = referenceDataLoader;
         this.config = config;
         this.authService = authService;
@@ -86,6 +93,8 @@ public final class AppContext {
         this.supplierService = supplierService;
         this.inventoryService = inventoryService;
         this.purchasingService = purchasingService;
+        this.staffService = staffService;
+        this.reservationService = reservationService;
     }
 
     /** Wires the graph from {@code config/db.properties} and the {@code system_config} table. */
@@ -108,6 +117,8 @@ public final class AppContext {
         StockMovementDAO stockMovementDAO = new StockMovementDAO(connections);
         PurchaseOrderDAO purchaseOrderDAO = new PurchaseOrderDAO(connections);
         PurchaseOrderItemDAO purchaseOrderItemDAO = new PurchaseOrderItemDAO(connections);
+        StaffDAO staffDAO = new StaffDAO(connections);
+        ReservationDAO reservationDAO = new ReservationDAO(connections);
 
         ReferenceDataLoader referenceDataLoader = new ReferenceDataLoader(systemConfigDAO);
         AppConfig config = referenceDataLoader.loadOrDefaults();
@@ -134,7 +145,10 @@ public final class AppContext {
             new SupplierService(supplierDAO),
             new InventoryService(connections, stockItemDAO, stockMovementDAO),
             new PurchasingService(connections, supplierDAO, stockItemDAO, stockMovementDAO,
-                purchaseOrderDAO, purchaseOrderItemDAO));
+                purchaseOrderDAO, purchaseOrderItemDAO),
+            new StaffService(staffDAO),
+            new ReservationService(connections, reservationDAO, diningTableDAO, tableService,
+                () -> holder[0].config()));
         holder[0] = context;
         return context;
     }
@@ -173,6 +187,10 @@ public final class AppContext {
     public InventoryService inventoryService() { return inventoryService; }
 
     public PurchasingService purchasingService() { return purchasingService; }
+
+    public StaffService staffService() { return staffService; }
+
+    public ReservationService reservationService() { return reservationService; }
 
     /** The signed-in session, or {@code null} before login / after logout. */
     public Session session() { return session; }

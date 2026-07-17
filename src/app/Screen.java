@@ -20,14 +20,14 @@ public enum Screen {
     // --- Operations ---
     ORDERS("Orders", Section.OPERATIONS, Permission.CREATE_ORDER, "/view/orders.fxml", "OR", true),
     TABLES("Tables", Section.OPERATIONS, Permission.UPDATE_TABLE_STATUS, "/view/tables.fxml", "TB", true),
-    RESERVATIONS("Reservations", Section.OPERATIONS, Permission.MANAGE_RESERVATION, "/view/reservations.fxml", "RS", false),
+    RESERVATIONS("Reservations", Section.OPERATIONS, Permission.MANAGE_RESERVATION, "/view/reservations.fxml", "RS", true),
 
     // --- Management ---
     MENU("Menu", Section.MANAGEMENT, Permission.MANAGE_MENU, "/view/menu.fxml", "MN", true),
     INVENTORY("Inventory", Section.MANAGEMENT, Permission.MANAGE_STOCK, "/view/inventory.fxml", "IN", true),
     SUPPLIERS("Suppliers", Section.MANAGEMENT, Permission.MANAGE_SUPPLIERS, "/view/suppliers.fxml", "SP", true),
     PURCHASING("Purchasing", Section.MANAGEMENT, Permission.MANAGE_PURCHASING, "/view/purchasing.fxml", "PO", true),
-    STAFF("Staff", Section.MANAGEMENT, Permission.MANAGE_STAFF, "/view/staff.fxml", "ST", false),
+    STAFF("Staff", Section.MANAGEMENT, Permission.MANAGE_STAFF, "/view/staff.fxml", "ST", true),
     REPORTS("Reports", Section.MANAGEMENT, Permission.VIEW_REPORTS, "/view/reports.fxml", "RP", false),
 
     // --- Administration ---

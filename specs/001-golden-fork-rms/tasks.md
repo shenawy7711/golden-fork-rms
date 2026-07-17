@@ -220,18 +220,25 @@ on the same table, and can seat/complete/cancel it.
 
 ### Tests for User Story 5
 
-- [ ] T065 [P] [US5] `test/service/ReservationServiceTest.java` — overlap algorithm (TDD §5.3): overlapping active bookings on the same table rejected; back-to-back non-overlapping allowed; cancelled/completed don't block (BR-27, FR-26).
+- [x] T065 [P] [US5] `test/service/ReservationServiceTest.java` — overlap algorithm (TDD §5.3): overlapping active bookings on the same table rejected; back-to-back non-overlapping allowed; cancelled/completed don't block (BR-27, FR-26).
 
 ### Implementation for User Story 5
 
-- [ ] T066 [P] [US5] Implement `src/dao/StaffDAO.java` (CRUD, active list, optional user link) with prepared statements.
-- [ ] T067 [P] [US5] Implement `src/dao/ReservationDAO.java` (CRUD, active bookings by table/window for overlap, status update) with prepared statements.
-- [ ] T068 [US5] Implement `src/service/StaffService.java` — save (distinct from user accounts) and deactivate-not-delete with `RbacGuard.require(MANAGE_STAFF)` (FR-23; BR-05, BR-26). (depends on T022, T066)
-- [ ] T069 [US5] Implement `src/service/ReservationService.java` — `create` (future date, required contact, party ≤ capacity warn/override, `hasOverlap` check, table→Reserved) and `seat`/`complete`/`cancel`/`markNoShow` state machine freeing holds, with `RbacGuard.require(MANAGE_RESERVATION)` (FR-24, FR-25, FR-26; BR-27/28/29). (depends on T014, T022, T040, T067)
-- [ ] T070 [P] [US5] Implement `src/controller/StaffController.java` + `src/view/staff.fxml` (FR-23).
-- [ ] T071 [P] [US5] Implement `src/controller/ReservationController.java` + `src/view/reservations.fxml` — booking + lifecycle (FR-24…FR-26).
+- [x] T066 [P] [US5] Implement `src/dao/StaffDAO.java` (CRUD, active list, optional user link) with prepared statements.
+- [x] T067 [P] [US5] Implement `src/dao/ReservationDAO.java` (CRUD, active bookings by table/window for overlap, status update) with prepared statements.
+- [x] T068 [US5] Implement `src/service/StaffService.java` — save (distinct from user accounts) and deactivate-not-delete with `RbacGuard.require(MANAGE_STAFF)` (FR-23; BR-05, BR-26). (depends on T022, T066)
+- [x] T069 [US5] Implement `src/service/ReservationService.java` — `create` (future date, required contact, party ≤ capacity warn/override, `hasOverlap` check, table→Reserved) and `seat`/`complete`/`cancel`/`markNoShow` state machine freeing holds, with `RbacGuard.require(MANAGE_RESERVATION)` (FR-24, FR-25, FR-26; BR-27/28/29). (depends on T014, T022, T040, T067)
+- [x] T070 [P] [US5] Implement `src/controller/StaffController.java` + `src/view/staff.fxml` (FR-23).
+- [x] T071 [P] [US5] Implement `src/controller/ReservationController.java` + `src/view/reservations.fxml` — booking + lifecycle (FR-24…FR-26).
 
 **Checkpoint**: Staff and reservations work with double-booking prevention.
+_Reached and verified end-to-end against the live DB._ A staff record was created and deactivated
+(history kept); a booking on a free table set it Reserved; an overlapping window was refused while a
+back-to-back one was allowed (BR-27); a party over capacity was refused without an override and accepted
+with one (BR-28); seating set the table Occupied and completing sent it to Needs Cleaning (BR-29); and an
+illegal transition (seating a completed booking) was rejected. All 85 tests pass; both constitution gates
+clean. Note: the reservation↔table coupling uses the single-status table model — a booking marks a Free
+table Reserved and releases it once no active booking remains.
 
 ---
 

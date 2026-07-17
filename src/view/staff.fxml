@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- Staff (T070, FR-23). Distinct from login accounts; deactivate, never delete (BR-05, BR-26). -->
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx/8"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="controller.StaffController"
+      styleClass="content" spacing="20">
+
+  <HBox alignment="CENTER_LEFT">
+    <VBox spacing="4">
+      <Label styleClass="h1,heading" text="Staff"/>
+      <Label styleClass="greeting-sub" text="Employee records — separate from login accounts."/>
+    </VBox>
+    <Region HBox.hgrow="ALWAYS"/>
+    <Button fx:id="refreshButton" styleClass="qa" text="Refresh"/>
+  </HBox>
+
+  <Label fx:id="messageLabel" styleClass="form-error" maxWidth="Infinity"
+         wrapText="true" visible="false" managed="false"/>
+
+  <HBox spacing="20" VBox.vgrow="ALWAYS">
+    <VBox styleClass="panel" spacing="12" HBox.hgrow="ALWAYS">
+      <Label styleClass="h2" text="Staff members"/>
+      <TableView fx:id="staffTable" VBox.vgrow="ALWAYS">
+        <columns>
+          <TableColumn fx:id="nameColumn" text="Name" prefWidth="170"/>
+          <TableColumn fx:id="positionColumn" text="Position" prefWidth="130"/>
+          <TableColumn fx:id="phoneColumn" text="Phone" prefWidth="120"/>
+          <TableColumn fx:id="emailColumn" text="Email" prefWidth="160"/>
+          <TableColumn fx:id="statusColumn" text="Status" prefWidth="80"/>
+        </columns>
+      </TableView>
+    </VBox>
+
+    <VBox styleClass="panel" spacing="14" minWidth="320" prefWidth="320">
+      <Label fx:id="formTitle" styleClass="h2" text="New staff member"/>
+      <VBox styleClass="field-group" spacing="7">
+        <Label text="Full name"/>
+        <TextField fx:id="nameField"/>
+      </VBox>
+      <VBox styleClass="field-group" spacing="7">
+        <Label text="Position"/>
+        <TextField fx:id="positionField" promptText="e.g. Server, Chef"/>
+      </VBox>
+      <VBox styleClass="field-group" spacing="7">
+        <Label text="Phone"/>
+        <TextField fx:id="phoneField"/>
+      </VBox>
+      <VBox styleClass="field-group" spacing="7">
+        <Label text="Email"/>
+        <TextField fx:id="emailField"/>
+      </VBox>
+      <HBox spacing="8">
+        <Button fx:id="saveButton" styleClass="btn-primary" text="Save" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
+        <Button fx:id="newButton" styleClass="qa" text="New" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
+        <Button fx:id="deactivateButton" styleClass="qa" text="Toggle active" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
+      </HBox>
+    </VBox>
+  </HBox>
+
+</VBox>
