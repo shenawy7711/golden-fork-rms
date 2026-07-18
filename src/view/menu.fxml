@@ -54,8 +54,8 @@
         <Label text="Display order"/>
         <TextField fx:id="categoryOrderField" promptText="optional"/>
       </VBox>
+      <Button fx:id="saveCategoryButton" styleClass="btn-primary" text="Save category" maxWidth="Infinity"/>
       <HBox spacing="8">
-        <Button fx:id="saveCategoryButton" styleClass="qa" text="Save" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
         <Button fx:id="newCategoryButton" styleClass="qa" text="New" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
         <Button fx:id="deleteCategoryButton" styleClass="qa" text="Delete" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
       </HBox>

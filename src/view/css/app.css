@@ -359,6 +359,8 @@
 .list-view .list-cell:filled:selected {
     -fx-background-color: #12253F; -fx-text-fill: #F5F1E9;
 }
+/* graphic-based cells (POS menu, open orders): child labels flip light when selected */
+.list-view .list-cell:filled:selected .label { -fx-text-fill: #F5F1E9; }
 .list-view .list-cell:empty { -fx-background-color: transparent; }
 
 /* ---------- combo box ---------- */
@@ -539,6 +541,32 @@
 .floor-card.navy.selected { -fx-border-color: #D0574E; }
 /* serif time / figure inside white row cards */
 .serif-num { -fx-font-family: "Playfair Display", "Georgia", serif; -fx-font-size: 19px; -fx-text-fill: #16294A; }
+
+/* ============================================================
+   POS — numbered start steps, guided empty state, big total
+   ============================================================ */
+.step-num {
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, #D8B45C, #B8863B);
+    -fx-background-radius: 11px;
+    -fx-min-width: 22px; -fx-min-height: 22px; -fx-max-width: 22px; -fx-max-height: 22px;
+    -fx-alignment: center; -fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #12253F;
+}
+.step-title { -fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #42526B; }
+.pos-empty-title {
+    -fx-font-family: "Playfair Display", "Georgia", serif;
+    -fx-font-size: 26px; -fx-text-fill: #16294A;
+}
+.pos-empty-sub { -fx-font-size: 13.5px; -fx-text-fill: #8A93A2; }
+.total-value {
+    -fx-font-family: "Playfair Display", "Georgia", serif;
+    -fx-font-size: 30px; -fx-text-fill: #13233D;
+}
+.danger-link {
+    -fx-background-color: transparent; -fx-text-fill: #B84339;
+    -fx-font-size: 13px; -fx-font-weight: bold; -fx-cursor: hand;
+    -fx-border-color: transparent;
+}
+.danger-link:hover { -fx-text-fill: #8C2F27; -fx-underline: true; }
 
 /* ---------- alerts / dialogs ---------- */
 .dialog-pane { -fx-background-color: #FFFFFF; }

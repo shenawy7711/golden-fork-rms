@@ -24,6 +24,11 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.geometry.Pos;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
 import service.exception.RmsException;
 import service.exception.ValidationException;
 import util.Money;
@@ -53,6 +58,8 @@ public final class OrderController implements ContextAware {
     @FXML private ListView<Order> openOrdersList;
     @FXML private Button resumeButton;
 
+    @FXML private VBox emptyState;
+    @FXML private VBox orderPane;
     @FXML private Label orderHeader;
     @FXML private ListView<MenuItem> itemsList;
     @FXML private TextField quantityField;
@@ -71,6 +78,7 @@ public final class OrderController implements ContextAware {
 
     @FXML private Label subtotalLabel;
     @FXML private Label discountLabel;
+    @FXML private Label taxTitleLabel;
     @FXML private Label taxLabel;
     @FXML private Label totalLabel;
 
@@ -201,6 +209,7 @@ public final class OrderController implements ContextAware {
         }
         currentOrder = context.orderService().findOrder(currentOrder.getOrderId());
         lines.setAll(context.orderService().listLines(currentOrder.getOrderId()));
+        showOrderPane(true);
         orderHeader.setText("Order " + currentOrder.getOrderNumber() + " · "
             + currentOrder.getOrderType().dbValue()
             + (currentOrder.getTableId() == null ? "" : " · " + tableLabel(currentOrder.getTableId())));
@@ -215,12 +224,21 @@ public final class OrderController implements ContextAware {
     private void showNoOrder() {
         currentOrder = null;
         lines.clear();
-        orderHeader.setText("No order open");
+        showOrderPane(false);
         subtotalLabel.setText(money(Money.ZERO));
         discountLabel.setText(money(Money.ZERO));
+        taxTitleLabel.setText("Tax");
         taxLabel.setText(money(Money.ZERO));
         totalLabel.setText(money(Money.ZERO));
         setOrderControlsDisabled(true);
+    }
+
+    /** Swaps the centre between the guided empty state and the live order workspace. */
+    private void showOrderPane(boolean open) {
+        orderPane.setVisible(open);
+        orderPane.setManaged(open);
+        emptyState.setVisible(!open);
+        emptyState.setManaged(!open);
     }
 
     private void setOrderControlsDisabled(boolean disabled) {
@@ -280,8 +298,9 @@ public final class OrderController implements ContextAware {
         discountLabel.setText(currentOrder.getDiscountAmount() == null
             ? money(Money.ZERO) : "-" + money(currentOrder.getDiscountAmount()));
         BigDecimal rate = currentOrder.getTaxRate() == null ? BigDecimal.ZERO : currentOrder.getTaxRate();
-        taxLabel.setText("Tax (" + rate.multiply(new BigDecimal("100")).stripTrailingZeros().toPlainString()
-            + "%): " + money(currentOrder.getTaxAmount()));
+        taxTitleLabel.setText("Tax ("
+            + rate.multiply(new BigDecimal("100")).stripTrailingZeros().toPlainString() + "%)");
+        taxLabel.setText(money(currentOrder.getTaxAmount()));
         totalLabel.setText(money(currentOrder.getTotal()));
     }
 
@@ -347,10 +366,32 @@ public final class OrderController implements ContextAware {
     private void configureTextRenderers() {
         tableCombo.setCellFactory(v -> tableCell());
         tableCombo.setButtonCell(tableCell());
+        typeCombo.setCellFactory(v -> typeCell());
+        typeCombo.setButtonCell(typeCell());
+        discountTypeCombo.setCellFactory(v -> discountCell());
+        discountTypeCombo.setButtonCell(discountCell());
         itemsList.setCellFactory(v -> itemCell());
         methodCombo.setCellFactory(v -> methodCell());
         methodCombo.setButtonCell(methodCell());
         openOrdersList.setCellFactory(v -> orderCell());
+    }
+
+    private static javafx.scene.control.ListCell<DiscountType> discountCell() {
+        return new javafx.scene.control.ListCell<DiscountType>() {
+            @Override protected void updateItem(DiscountType d, boolean empty) {
+                super.updateItem(d, empty);
+                setText(empty || d == null ? null : d.dbValue());
+            }
+        };
+    }
+
+    private static javafx.scene.control.ListCell<OrderType> typeCell() {
+        return new javafx.scene.control.ListCell<OrderType>() {
+            @Override protected void updateItem(OrderType t, boolean empty) {
+                super.updateItem(t, empty);
+                setText(empty || t == null ? null : t.dbValue());
+            }
+        };
     }
 
     private static javafx.scene.control.ListCell<DiningTable> tableCell() {
@@ -362,11 +403,25 @@ public final class OrderController implements ContextAware {
         };
     }
 
+    /** Dish name on the left, price on the right — scannable like a printed menu. */
     private javafx.scene.control.ListCell<MenuItem> itemCell() {
         return new javafx.scene.control.ListCell<MenuItem>() {
             @Override protected void updateItem(MenuItem i, boolean empty) {
                 super.updateItem(i, empty);
-                setText(empty || i == null ? null : i.getName() + "  ·  " + money(i.getPrice()));
+                if (empty || i == null) {
+                    setGraphic(null);
+                    setText(null);
+                    return;
+                }
+                Label name = new Label(i.getName());
+                Region gap = new Region();
+                HBox.setHgrow(gap, Priority.ALWAYS);
+                Label price = new Label(money(i.getPrice()));
+                price.setStyle("-fx-font-weight: bold; -fx-text-fill: #9A742B;");
+                HBox row = new HBox(8, name, gap, price);
+                row.setAlignment(Pos.CENTER_LEFT);
+                setGraphic(row);
+                setText(null);
             }
         };
     }
@@ -380,12 +435,23 @@ public final class OrderController implements ContextAware {
         };
     }
 
+    /** Two lines per open order: the number, then where it is sitting. */
     private javafx.scene.control.ListCell<Order> orderCell() {
         return new javafx.scene.control.ListCell<Order>() {
             @Override protected void updateItem(Order o, boolean empty) {
                 super.updateItem(o, empty);
-                setText(empty || o == null ? null : o.getOrderNumber() + " · " + o.getOrderType().dbValue()
+                if (empty || o == null) {
+                    setGraphic(null);
+                    setText(null);
+                    return;
+                }
+                Label number = new Label(o.getOrderNumber());
+                number.setStyle("-fx-font-weight: bold;");
+                Label where = new Label(o.getOrderType().dbValue()
                     + (o.getTableId() == null ? "" : " · " + tableLabel(o.getTableId())));
+                where.setStyle("-fx-font-size: 11.5px; -fx-opacity: 0.7;");
+                setGraphic(new VBox(1, number, where));
+                setText(null);
             }
         };
     }
