@@ -38,7 +38,7 @@
   <HBox spacing="20" VBox.vgrow="ALWAYS">
 
     <!-- Start / resume an order -->
-    <VBox spacing="20" minWidth="260" prefWidth="260">
+    <VBox spacing="20" minWidth="260" prefWidth="260" maxWidth="260">
       <VBox styleClass="panel" spacing="12">
         <Label styleClass="h2" text="New order"/>
         <VBox styleClass="field-group" spacing="7">
@@ -60,7 +60,7 @@
     </VBox>
 
     <!-- Menu + current order lines -->
-    <VBox styleClass="panel" spacing="12" HBox.hgrow="ALWAYS">
+    <VBox styleClass="panel" spacing="12" HBox.hgrow="ALWAYS" minWidth="0">
       <Label fx:id="orderHeader" styleClass="h2" text="No order open"/>
 
       <HBox spacing="16" VBox.vgrow="ALWAYS">
@@ -73,9 +73,10 @@
           </HBox>
         </VBox>
 
-        <VBox spacing="8" HBox.hgrow="ALWAYS">
+        <VBox spacing="8" HBox.hgrow="ALWAYS" minWidth="0">
           <Label styleClass="hint" text="Order lines"/>
           <TableView fx:id="linesTable" VBox.vgrow="ALWAYS">
+            <columnResizePolicy><TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/></columnResizePolicy>
             <columns>
               <TableColumn fx:id="lineNameColumn" text="Item" prefWidth="180"/>
               <TableColumn fx:id="lineQtyColumn" text="Qty" prefWidth="50"/>
@@ -89,7 +90,7 @@
     </VBox>
 
     <!-- Discount, totals, payment -->
-    <VBox spacing="20" minWidth="300" prefWidth="300">
+    <VBox spacing="20" minWidth="300" prefWidth="300" maxWidth="300">
       <VBox styleClass="panel" spacing="12">
         <Label styleClass="h2" text="Discount"/>
         <VBox styleClass="field-group" spacing="7">

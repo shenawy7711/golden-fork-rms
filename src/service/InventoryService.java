@@ -56,6 +56,11 @@ public final class InventoryService {
         return stockItemDAO.findById(stockItemId);
     }
 
+    /** The movement history for one item, most recent first (FR-22) — the ledger behind its on-hand. */
+    public List<StockMovement> movementsFor(int stockItemId) {
+        return stockMovementDAO.findByItem(stockItemId);
+    }
+
     /**
      * Creates or updates a stock item (FR-18, BR-21). On create, the opening {@code quantity_on_hand}
      * is accepted; on update it is left untouched (it moves only via {@link #adjustStock}).

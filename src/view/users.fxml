@@ -37,9 +37,10 @@
   <HBox spacing="20" VBox.vgrow="ALWAYS">
 
     <!-- Account list -->
-    <VBox styleClass="panel" spacing="12" HBox.hgrow="ALWAYS">
+    <VBox styleClass="panel" spacing="12" HBox.hgrow="ALWAYS" minWidth="0">
       <Label styleClass="h2" text="Accounts"/>
       <TableView fx:id="userTable" VBox.vgrow="ALWAYS">
+        <columnResizePolicy><TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/></columnResizePolicy>
         <columns>
           <TableColumn fx:id="usernameColumn" text="Username" prefWidth="150"/>
           <TableColumn fx:id="fullNameColumn" text="Full name" prefWidth="190"/>
@@ -56,7 +57,7 @@
     </VBox>
 
     <!-- Create / edit -->
-    <VBox styleClass="panel" spacing="14" minWidth="330" prefWidth="330">
+    <VBox styleClass="panel" spacing="14" minWidth="330" prefWidth="330" maxWidth="330">
       <Label fx:id="formTitle" styleClass="h2" text="New account"/>
 
       <VBox styleClass="field-group" spacing="7">

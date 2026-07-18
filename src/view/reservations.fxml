@@ -1,32 +1,36 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-  Reservations (T071, FR-24…FR-26). Book a table (no overlapping active bookings, BR-27) and move
-  a booking through Seated/Completed/Cancelled/No-Show; the service releases the table hold (BR-29).
+  Reservations (T071, FR-24…FR-26) — booking cards with status chips on the left, the navy
+  detail side-panel from design mockup #3 on the right. Booking prevents double-booking a table
+  (BR-27); the lifecycle actions move a booking through Seated/Completed/Cancelled/No-Show and
+  the service releases the table hold (BR-29). "+ New reservation" switches the panel to the form.
 -->
 
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.TableColumn?>
-<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
 <VBox xmlns="http://javafx.com/javafx/8"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="controller.ReservationController"
-      styleClass="content" spacing="20">
+      styleClass="content" spacing="18">
 
-  <HBox alignment="CENTER_LEFT">
+  <HBox alignment="CENTER_LEFT" spacing="10">
     <VBox spacing="4">
       <Label styleClass="h1,heading" text="Reservations"/>
       <Label styleClass="greeting-sub" text="Book tables and move bookings through their lifecycle."/>
     </VBox>
     <Region HBox.hgrow="ALWAYS"/>
+    <Button fx:id="newButton" styleClass="btn-gold" text="+ New reservation"/>
     <Button fx:id="refreshButton" styleClass="qa" text="Refresh"/>
   </HBox>
 
@@ -35,55 +39,117 @@
 
   <HBox spacing="20" VBox.vgrow="ALWAYS">
 
-    <!-- Bookings + lifecycle -->
-    <VBox styleClass="panel" spacing="12" HBox.hgrow="ALWAYS">
-      <Label styleClass="h2" text="Bookings"/>
-      <TableView fx:id="reservationTable" VBox.vgrow="ALWAYS">
-        <columns>
-          <TableColumn fx:id="customerColumn" text="Customer" prefWidth="150"/>
-          <TableColumn fx:id="tableColumn" text="Table" prefWidth="80"/>
-          <TableColumn fx:id="whenColumn" text="When" prefWidth="140"/>
-          <TableColumn fx:id="partyColumn" text="Party" prefWidth="60"/>
-          <TableColumn fx:id="statusColumn" text="Status" prefWidth="100"/>
-        </columns>
-      </TableView>
-      <HBox spacing="8">
-        <Button fx:id="seatButton" styleClass="qa" text="Seat"/>
-        <Button fx:id="completeButton" styleClass="qa" text="Complete"/>
-        <Button fx:id="cancelButton" styleClass="qa" text="Cancel"/>
-        <Button fx:id="noShowButton" styleClass="qa" text="No-show"/>
-      </HBox>
+    <!-- Booking cards + status chips -->
+    <VBox spacing="14" HBox.hgrow="ALWAYS" minWidth="0">
+      <FlowPane hgap="10" vgap="10">
+        <Button fx:id="chipAll" styleClass="chip" text="All"/>
+        <Button fx:id="chipBooked" styleClass="chip" text="Booked"/>
+        <Button fx:id="chipSeated" styleClass="chip" text="Seated"/>
+        <Button fx:id="chipCompleted" styleClass="chip" text="Completed"/>
+        <Button fx:id="chipCancelled" styleClass="chip" text="Cancelled"/>
+        <Button fx:id="chipNoShow" styleClass="chip" text="No-Show"/>
+      </FlowPane>
+
+      <ScrollPane fitToWidth="true" hbarPolicy="NEVER" VBox.vgrow="ALWAYS"
+                  style="-fx-background-color: transparent;">
+        <FlowPane fx:id="cardsPane" hgap="14" vgap="14"/>
+      </ScrollPane>
     </VBox>
 
-    <!-- New booking -->
-    <VBox styleClass="panel" spacing="14" minWidth="320" prefWidth="320">
-      <Label styleClass="h2" text="New booking"/>
-      <VBox styleClass="field-group" spacing="7">
-        <Label text="Table"/>
-        <ComboBox fx:id="tableCombo" maxWidth="Infinity"/>
+    <!-- Navy detail side-panel -->
+    <VBox fx:id="detailPanel" styleClass="detail-panel" minWidth="344" prefWidth="344" maxWidth="344">
+
+      <VBox styleClass="detail-head" spacing="7">
+        <HBox alignment="CENTER_LEFT">
+          <Label fx:id="headPill" styleClass="pill,on-navy" text=""/>
+          <Region HBox.hgrow="ALWAYS"/>
+          <Label fx:id="headTopline" styleClass="detail-topline" text=""/>
+        </HBox>
+        <Label fx:id="headTitle" styleClass="detail-title" text="New reservation"/>
+        <Label fx:id="headSub" styleClass="detail-sub" text=""/>
       </VBox>
-      <VBox styleClass="field-group" spacing="7">
-        <Label text="Customer name"/>
-        <TextField fx:id="customerField"/>
+
+      <ScrollPane fitToWidth="true" hbarPolicy="NEVER" VBox.vgrow="ALWAYS"
+                  style="-fx-background-color: transparent;">
+        <StackPane>
+
+          <!-- DETAIL MODE -->
+          <VBox fx:id="detailBody" styleClass="detail-body" visible="false" managed="false">
+            <HBox styleClass="kv-row" alignment="CENTER_LEFT">
+              <Label styleClass="k" text="Table"/>
+              <Region HBox.hgrow="ALWAYS"/>
+              <Label fx:id="kvTable" styleClass="v" text=""/>
+            </HBox>
+            <HBox styleClass="kv-row" alignment="CENTER_LEFT">
+              <Label styleClass="k" text="Date &amp; time"/>
+              <Region HBox.hgrow="ALWAYS"/>
+              <Label fx:id="kvWhen" styleClass="v" text=""/>
+            </HBox>
+            <HBox styleClass="kv-row" alignment="CENTER_LEFT">
+              <Label styleClass="k" text="Duration"/>
+              <Region HBox.hgrow="ALWAYS"/>
+              <Label fx:id="kvDuration" styleClass="v" text=""/>
+            </HBox>
+            <HBox styleClass="kv-row" alignment="CENTER_LEFT">
+              <Label styleClass="k" text="Party size"/>
+              <Region HBox.hgrow="ALWAYS"/>
+              <Label fx:id="kvParty" styleClass="v" text=""/>
+            </HBox>
+            <HBox styleClass="kv-row" alignment="CENTER_LEFT">
+              <Label styleClass="k" text="Phone"/>
+              <Region HBox.hgrow="ALWAYS"/>
+              <Label fx:id="kvPhone" styleClass="v" text=""/>
+            </HBox>
+            <HBox styleClass="kv-row" alignment="CENTER_LEFT">
+              <Label styleClass="k" text="Email"/>
+              <Region HBox.hgrow="ALWAYS"/>
+              <Label fx:id="kvEmail" styleClass="v" text=""/>
+            </HBox>
+          </VBox>
+
+          <!-- FORM MODE — new booking -->
+          <VBox fx:id="formBody" styleClass="detail-body" spacing="12">
+            <padding><javafx.geometry.Insets top="16"/></padding>
+            <VBox styleClass="field-group" spacing="6">
+              <Label text="Table"/>
+              <ComboBox fx:id="tableCombo" maxWidth="Infinity"/>
+            </VBox>
+            <VBox styleClass="field-group" spacing="6">
+              <Label text="Customer name"/>
+              <TextField fx:id="customerField"/>
+            </VBox>
+            <VBox styleClass="field-group" spacing="6">
+              <Label text="Phone"/>
+              <TextField fx:id="phoneField"/>
+            </VBox>
+            <VBox styleClass="field-group" spacing="6">
+              <Label text="Email"/>
+              <TextField fx:id="emailField"/>
+            </VBox>
+            <VBox styleClass="field-group" spacing="6">
+              <Label text="Date &amp; time"/>
+              <TextField fx:id="whenField" promptText="YYYY-MM-DD HH:MM"/>
+            </VBox>
+            <VBox styleClass="field-group" spacing="6">
+              <Label text="Party size"/>
+              <TextField fx:id="partyField"/>
+            </VBox>
+            <CheckBox fx:id="overrideCapacityBox" text="Allow party larger than the table"/>
+          </VBox>
+
+        </StackPane>
+      </ScrollPane>
+
+      <!-- pinned footers -->
+      <VBox fx:id="detailFooter" spacing="8" visible="false" managed="false">
+        <padding><javafx.geometry.Insets top="8" right="24" bottom="20" left="24"/></padding>
+        <VBox fx:id="actionBox" spacing="8"/>
       </VBox>
-      <VBox styleClass="field-group" spacing="7">
-        <Label text="Phone"/>
-        <TextField fx:id="phoneField"/>
+      <VBox fx:id="formFooter" spacing="8">
+        <padding><javafx.geometry.Insets top="8" right="24" bottom="20" left="24"/></padding>
+        <Button fx:id="createButton" styleClass="btn-gold" text="Book table" maxWidth="Infinity"/>
+        <Button fx:id="cancelFormButton" styleClass="qa" text="Cancel" maxWidth="Infinity"/>
       </VBox>
-      <VBox styleClass="field-group" spacing="7">
-        <Label text="Email"/>
-        <TextField fx:id="emailField"/>
-      </VBox>
-      <VBox styleClass="field-group" spacing="7">
-        <Label text="Date &amp; time"/>
-        <TextField fx:id="whenField" promptText="YYYY-MM-DD HH:MM"/>
-      </VBox>
-      <VBox styleClass="field-group" spacing="7">
-        <Label text="Party size"/>
-        <TextField fx:id="partyField"/>
-      </VBox>
-      <CheckBox fx:id="overrideCapacityBox" text="Allow party larger than the table"/>
-      <Button fx:id="createButton" styleClass="btn-primary" text="Book table" maxWidth="Infinity"/>
     </VBox>
 
   </HBox>

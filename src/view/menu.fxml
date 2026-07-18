@@ -37,9 +37,10 @@
   <HBox spacing="20" VBox.vgrow="ALWAYS">
 
     <!-- Categories -->
-    <VBox styleClass="panel" spacing="12" minWidth="260" prefWidth="260">
+    <VBox styleClass="panel" spacing="12" minWidth="260" prefWidth="260" maxWidth="260">
       <Label styleClass="h2" text="Categories"/>
       <TableView fx:id="categoryTable" VBox.vgrow="ALWAYS">
+        <columnResizePolicy><TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/></columnResizePolicy>
         <columns>
           <TableColumn fx:id="categoryNameColumn" text="Name" prefWidth="140"/>
           <TableColumn fx:id="categoryOrderColumn" text="Order" prefWidth="60"/>
@@ -61,13 +62,14 @@
     </VBox>
 
     <!-- Items -->
-    <VBox styleClass="panel" spacing="12" HBox.hgrow="ALWAYS">
+    <VBox styleClass="panel" spacing="12" HBox.hgrow="ALWAYS" minWidth="0">
       <HBox alignment="CENTER_LEFT" spacing="10">
         <Label styleClass="h2" text="Items"/>
         <Region HBox.hgrow="ALWAYS"/>
         <Label fx:id="itemFilterLabel" styleClass="hint" text="All categories"/>
       </HBox>
       <TableView fx:id="itemTable" VBox.vgrow="ALWAYS">
+        <columnResizePolicy><TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/></columnResizePolicy>
         <columns>
           <TableColumn fx:id="itemNameColumn" text="Item" prefWidth="180"/>
           <TableColumn fx:id="itemCategoryColumn" text="Category" prefWidth="130"/>
@@ -83,7 +85,7 @@
     </VBox>
 
     <!-- Item editor -->
-    <VBox styleClass="panel" spacing="14" minWidth="300" prefWidth="300">
+    <VBox styleClass="panel" spacing="14" minWidth="300" prefWidth="300" maxWidth="300">
       <Label fx:id="itemFormTitle" styleClass="h2" text="New item"/>
 
       <VBox styleClass="field-group" spacing="7">

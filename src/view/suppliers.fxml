@@ -29,9 +29,10 @@
          wrapText="true" visible="false" managed="false"/>
 
   <HBox spacing="20" VBox.vgrow="ALWAYS">
-    <VBox styleClass="panel" spacing="12" HBox.hgrow="ALWAYS">
+    <VBox styleClass="panel" spacing="12" HBox.hgrow="ALWAYS" minWidth="0">
       <Label styleClass="h2" text="Suppliers"/>
       <TableView fx:id="supplierTable" VBox.vgrow="ALWAYS">
+        <columnResizePolicy><TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/></columnResizePolicy>
         <columns>
           <TableColumn fx:id="nameColumn" text="Name" prefWidth="180"/>
           <TableColumn fx:id="contactColumn" text="Contact" prefWidth="130"/>
@@ -42,7 +43,7 @@
       </TableView>
     </VBox>
 
-    <VBox styleClass="panel" spacing="14" minWidth="320" prefWidth="320">
+    <VBox styleClass="panel" spacing="14" minWidth="320" prefWidth="320" maxWidth="320">
       <Label fx:id="formTitle" styleClass="h2" text="New supplier"/>
       <VBox styleClass="field-group" spacing="7">
         <Label text="Name"/>

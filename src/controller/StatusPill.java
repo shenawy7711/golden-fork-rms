@@ -13,6 +13,14 @@ final class StatusPill {
 
     private StatusPill() {}
 
+    /** A standalone pill label for card lists and detail headers (same colour rules as columns). */
+    static Label make(String value, String... extraStyles) {
+        Label pill = new Label(value);
+        pill.getStyleClass().addAll("pill", variantFor(value));
+        pill.getStyleClass().addAll(extraStyles);
+        return pill;
+    }
+
     /** Turns a {@code TableColumn<S,String>} of status text into a pill column. */
     static <S> void apply(TableColumn<S, String> column) {
         column.setCellFactory(col -> new TableCell<S, String>() {
