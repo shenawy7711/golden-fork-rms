@@ -8,12 +8,14 @@ import com.lowagie.text.PageSize;
 import com.lowagie.text.Paragraph;
 import com.lowagie.text.Rectangle;
 import com.lowagie.text.pdf.PdfWriter;
+import dao.DiningTableDAO;
 import dao.MenuItemDAO;
 import dao.OrderDAO;
 import dao.OrderItemDAO;
 import dao.PaymentDAO;
 import dao.PaymentMethodDAO;
 import dao.UserDAO;
+import domain.DiningTable;
 import domain.MenuItem;
 import domain.Order;
 import domain.OrderItem;
@@ -55,15 +57,18 @@ public final class ReceiptService {
     private final PaymentMethodDAO paymentMethodDAO;
     private final MenuItemDAO menuItemDAO;
     private final UserDAO userDAO;
+    private final DiningTableDAO diningTableDAO;
 
     public ReceiptService(OrderDAO orderDAO, OrderItemDAO orderItemDAO, PaymentDAO paymentDAO,
-                          PaymentMethodDAO paymentMethodDAO, MenuItemDAO menuItemDAO, UserDAO userDAO) {
+                          PaymentMethodDAO paymentMethodDAO, MenuItemDAO menuItemDAO, UserDAO userDAO,
+                          DiningTableDAO diningTableDAO) {
         this.orderDAO = orderDAO;
         this.orderItemDAO = orderItemDAO;
         this.paymentDAO = paymentDAO;
         this.paymentMethodDAO = paymentMethodDAO;
         this.menuItemDAO = menuItemDAO;
         this.userDAO = userDAO;
+        this.diningTableDAO = diningTableDAO;
     }
 
     /**
@@ -117,7 +122,7 @@ public final class ReceiptService {
         add(doc, line("Date: " + (when == null ? "" : STAMP.format(when)), body));
         String seat = order.getOrderType() == OrderType.TAKEAWAY
             ? "Takeaway"
-            : "Table: " + (order.getTableId() == null ? "-" : order.getTableId());
+            : "Table: " + tableLabel(order.getTableId());
         add(doc, line(seat, body));
         add(doc, line("Cashier: " + (cashier == null ? "-" : cashier.getFullName()), body));
         add(doc, line("- - - - - - - - - - - - - - - - - -", body));
@@ -145,6 +150,13 @@ public final class ReceiptService {
         }
         add(doc, centred("- - - - - - - - - - - - - - - - - -", body));
         add(doc, centred("Thank you!", body));
+    }
+
+    /** The table's label ("T4") for the seat line; falls back to the id if it was deleted. */
+    private String tableLabel(Integer tableId) {
+        if (tableId == null) return "-";
+        DiningTable table = diningTableDAO.findById(tableId);
+        return table == null ? "#" + tableId : table.getLabel();
     }
 
     private Map<Integer, String> itemNames(List<OrderItem> lines) {

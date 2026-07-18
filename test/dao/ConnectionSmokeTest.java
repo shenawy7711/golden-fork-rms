@@ -29,8 +29,10 @@ class ConnectionSmokeTest {
                 assertEquals(3, rs.getInt(1), "expected the 3 seeded roles");
             }
 
+            // The live DB accumulates accounts over time; the invariant is that the
+            // seeded admin is present and active, not that it is alone.
             try (ResultSet rs = st.executeQuery(
-                    "SELECT COUNT(*) FROM user_account WHERE status = 'Active'")) {
+                    "SELECT COUNT(*) FROM user_account WHERE username = 'admin' AND status = 'Active'")) {
                 assertTrue(rs.next());
                 assertEquals(1, rs.getInt(1), "expected the seeded admin account");
             }

@@ -94,6 +94,7 @@ public final class OrderController implements ContextAware {
     private final ObservableList<PaymentMethod> methods = FXCollections.observableArrayList();
 
     private final Map<Integer, String> itemNames = new HashMap<>();
+    private final Map<Integer, String> tableLabels = new HashMap<>();
 
     private Order currentOrder;
 
@@ -143,6 +144,10 @@ public final class OrderController implements ContextAware {
     private void reloadReference() {
         run(() -> {
             freeTables.setAll(context.tableService().listByStatus(TableStatus.FREE));
+            tableLabels.clear();
+            for (DiningTable table : context.tableService().listTables()) {
+                tableLabels.put(table.getTableId(), table.getLabel());
+            }
             openOrders.setAll(context.orderService().listOpenOrders());
             orderableItems.setAll(context.menuService().listOrderableItems());
             methods.setAll(context.paymentMethodDAO().findActive());
@@ -198,7 +203,7 @@ public final class OrderController implements ContextAware {
         lines.setAll(context.orderService().listLines(currentOrder.getOrderId()));
         orderHeader.setText("Order " + currentOrder.getOrderNumber() + " · "
             + currentOrder.getOrderType().dbValue()
-            + (currentOrder.getTableId() == null ? "" : " · Table " + currentOrder.getTableId()));
+            + (currentOrder.getTableId() == null ? "" : " · " + tableLabel(currentOrder.getTableId())));
         discountTypeCombo.setValue(currentOrder.getDiscountType());
         discountValueField.setText(currentOrder.getDiscountValue() == null
             ? "" : currentOrder.getDiscountValue().toPlainString());
@@ -380,9 +385,14 @@ public final class OrderController implements ContextAware {
             @Override protected void updateItem(Order o, boolean empty) {
                 super.updateItem(o, empty);
                 setText(empty || o == null ? null : o.getOrderNumber() + " · " + o.getOrderType().dbValue()
-                    + (o.getTableId() == null ? "" : " · T" + o.getTableId()));
+                    + (o.getTableId() == null ? "" : " · " + tableLabel(o.getTableId())));
             }
         };
+    }
+
+    /** The table's label ("T4"), falling back to the raw id if it was deleted meanwhile. */
+    private String tableLabel(int tableId) {
+        return tableLabels.getOrDefault(tableId, "table #" + tableId);
     }
 
     private static int parseQuantity(String text) {

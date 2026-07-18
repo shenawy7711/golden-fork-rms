@@ -101,6 +101,7 @@ public final class TableController implements ContextAware {
     private void reload() {
         run(() -> {
             tables = context.tableService().listTables();
+            tables.sort(byLabel());
             if (selected != null) {
                 selected = findById(selected.getTableId());
             }
@@ -109,6 +110,27 @@ public final class TableController implements ContextAware {
                 showDetail(selected);
             }
         });
+    }
+
+    /** "T2" before "T10": orders by the numeric part when labels share a prefix. */
+    static java.util.Comparator<DiningTable> byLabel() {
+        return (a, b) -> {
+            int byNumber = Integer.compare(trailingNumber(a.getLabel()), trailingNumber(b.getLabel()));
+            return byNumber != 0 ? byNumber : a.getLabel().compareToIgnoreCase(b.getLabel());
+        };
+    }
+
+    /** The trailing digits of a label ("T12" → 12), or MAX_VALUE when there are none. */
+    private static int trailingNumber(String label) {
+        if (label == null) return Integer.MAX_VALUE;
+        int i = label.length();
+        while (i > 0 && Character.isDigit(label.charAt(i - 1))) i--;
+        if (i == label.length()) return Integer.MAX_VALUE;
+        try {
+            return Integer.parseInt(label.substring(i));
+        } catch (NumberFormatException e) {
+            return Integer.MAX_VALUE;
+        }
     }
 
     private DiningTable findById(int tableId) {

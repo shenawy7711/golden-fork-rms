@@ -369,6 +369,7 @@ public final class DashboardController implements ContextAware {
 
         try {
             List<DiningTable> tables = context.tableService().listTables();
+            tables.sort(TableController.byLabel());
             if (!tables.isEmpty()) panels.add(tablesGlancePanel(tables));
         } catch (RmsException ignored) { }
 
