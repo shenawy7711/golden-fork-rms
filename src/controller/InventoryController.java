@@ -5,6 +5,7 @@ import app.ContextAware;
 import app.Navigator;
 import domain.StockItem;
 import domain.StockMovement;
+import domain.Supplier;
 import domain.enums.MovementType;
 import domain.enums.Status;
 import javafx.collections.FXCollections;
@@ -12,6 +13,7 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
@@ -56,6 +58,7 @@ public final class InventoryController implements ContextAware {
     @FXML private Label kvUnit;
     @FXML private Label kvOnHand;
     @FXML private Label kvReorder;
+    @FXML private Label kvSupplier;
     @FXML private Label kvStatus;
     @FXML private VBox movementsBox;
     @FXML private VBox detailFooter;
@@ -69,6 +72,7 @@ public final class InventoryController implements ContextAware {
     @FXML private TextField nameField;
     @FXML private TextField unitField;
     @FXML private TextField reorderField;
+    @FXML private ComboBox<Supplier> supplierCombo;
     @FXML private TextField openingField;
     @FXML private Button saveButton;
     @FXML private Button cancelButton;
@@ -88,8 +92,20 @@ public final class InventoryController implements ContextAware {
     private Filter filter = Filter.ALL;
     private StockItem editing;
 
+    /** Combo sentinel for "no supplier" — ObservableList cannot hold null. */
+    private static final Supplier NO_SUPPLIER = new Supplier();
+    static {
+        NO_SUPPLIER.setSupplierId(0);
+        NO_SUPPLIER.setName("— No supplier —");
+    }
+    private final ObservableList<Supplier> suppliers = FXCollections.observableArrayList();
+    private final java.util.Map<Integer, String> supplierNames = new java.util.HashMap<>();
+
     @FXML
     private void initialize() {
+        supplierCombo.setItems(suppliers);
+        supplierCombo.setButtonCell(supplierCell());
+        supplierCombo.setCellFactory(v -> supplierCell());
         itemList.setItems(visible);
         itemList.setCellFactory(v -> itemCell());
         itemList.getSelectionModel().selectedItemProperty()
@@ -122,10 +138,26 @@ public final class InventoryController implements ContextAware {
 
     // ---------- list ----------
 
+    private static ListCell<Supplier> supplierCell() {
+        return new ListCell<Supplier>() {
+            @Override protected void updateItem(Supplier s, boolean empty) {
+                super.updateItem(s, empty);
+                setText(empty || s == null ? null : s.getName());
+            }
+        };
+    }
+
     private void reload() {
         run(() -> {
             StockItem keep = selected();
             all = context.inventoryService().listItems();
+            List<Supplier> active = context.supplierService().listActive();
+            suppliers.setAll(NO_SUPPLIER);
+            suppliers.addAll(active);
+            supplierNames.clear();
+            for (Supplier s : context.supplierService().listSuppliers()) {
+                supplierNames.put(s.getSupplierId(), s.getName());
+            }
             applyFilter();
             if (keep != null) {
                 for (StockItem item : visible) {
@@ -259,6 +291,8 @@ public final class InventoryController implements ContextAware {
         kvUnit.setText(item.getUnitOfMeasure());
         kvOnHand.setText(plain(item.getQuantityOnHand()) + " " + item.getUnitOfMeasure());
         kvReorder.setText(plain(item.getReorderLevel()) + " " + item.getUnitOfMeasure());
+        kvSupplier.setText(item.getSupplierId() == null
+            ? "—" : supplierNames.getOrDefault(item.getSupplierId(), "#" + item.getSupplierId()));
         kvStatus.setText(item.getStatus() == Status.ACTIVE ? "Active" : "Inactive");
 
         rebuildMovements(item);
@@ -328,6 +362,8 @@ public final class InventoryController implements ContextAware {
         nameField.setText(item == null ? "" : item.getName());
         unitField.setText(item == null ? "" : item.getUnitOfMeasure());
         reorderField.setText(item == null ? "" : plain(item.getReorderLevel()));
+        supplierCombo.setValue(item == null || item.getSupplierId() == null
+            ? NO_SUPPLIER : findSupplier(item.getSupplierId()));
         openingField.setText(item == null ? "" : plain(item.getQuantityOnHand()));
         // On-hand is not editable after creation; it moves via adjustments only.
         openingField.setDisable(item != null);
@@ -370,11 +406,21 @@ public final class InventoryController implements ContextAware {
             item.setName(nameField.getText());
             item.setUnitOfMeasure(unitField.getText());
             item.setReorderLevel(parseDecimal(reorderField.getText(), "reorder level", false));
+            Supplier chosen = supplierCombo.getValue();
+            item.setSupplierId(chosen == null || chosen.getSupplierId() == 0
+                ? null : chosen.getSupplierId());
             StockItem saved = context.inventoryService().save(context.session(), item);
             editing = null;
             reload();
             selectById(saved.getStockItemId());
         });
+    }
+
+    private Supplier findSupplier(int supplierId) {
+        for (Supplier s : suppliers) {
+            if (s.getSupplierId() == supplierId) return s;
+        }
+        return NO_SUPPLIER;
     }
 
     private void selectById(int stockItemId) {

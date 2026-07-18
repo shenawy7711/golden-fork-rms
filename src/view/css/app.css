@@ -80,6 +80,9 @@
     -fx-border-color: #E0DACC; -fx-border-width: 1.4px; -fx-border-radius: 10px;
     -fx-font-size: 14.5px; -fx-text-fill: #1B2A41; -fx-prompt-text-fill: #ABA492;
 }
+.field:hover, .text-field:hover, .password-field:hover {
+    -fx-border-color: #C8B78C;
+}
 .field:focused, .text-field:focused, .password-field:focused {
     -fx-background-color: #FFFFFF; -fx-border-color: #C29A3B;
     -fx-effect: dropshadow(gaussian, rgba(194,154,59,0.22), 10, 0, 0, 0);
@@ -126,7 +129,10 @@
     -fx-background-radius: 12px; -fx-cursor: hand;
     -fx-effect: dropshadow(gaussian, rgba(18,37,63,0.22), 14, 0, 0, 6);
 }
-.btn-primary:hover  { -fx-background-color: #1C3454; }
+.btn-primary:hover  {
+    -fx-background-color: #1C3454;
+    -fx-effect: dropshadow(gaussian, rgba(18,37,63,0.42), 18, 0, 0, 7);
+}
 .btn-primary:pressed { -fx-translate-y: 1px; }
 .btn-primary:disabled { -fx-opacity: 0.5; -fx-effect: null; -fx-cursor: default; }
 
@@ -138,7 +144,10 @@
     -fx-background-radius: 12px; -fx-cursor: hand;
     -fx-effect: dropshadow(gaussian, rgba(185,143,46,0.5), 18, 0, 0, 8);
 }
-.btn-gold:hover  { -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, #DCB856, #C39836); }
+.btn-gold:hover  {
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, #DCB856, #C39836);
+    -fx-effect: dropshadow(gaussian, rgba(185,143,46,0.7), 22, 0, 0, 9);
+}
 .btn-gold:pressed { -fx-translate-y: 1px; }
 .btn-gold:disabled { -fx-opacity: 0.5; -fx-effect: null; -fx-cursor: default; }
 
@@ -158,7 +167,11 @@
     -fx-border-color: transparent; -fx-border-width: 1px; -fx-border-radius: 12px;
     -fx-effect: dropshadow(gaussian, rgba(31,44,66,0.06), 16, 0, 0, 5);
 }
-.qa:hover { -fx-background-color: #FBF6EC; }
+.qa:hover {
+    -fx-background-color: #FBF6EC;
+    -fx-border-color: #D8B45C;
+    -fx-effect: dropshadow(gaussian, rgba(194,154,59,0.28), 16, 0, 0, 5);
+}
 .qa:pressed { -fx-translate-y: 1px; }
 .qa.primary {
     -fx-background-color: #13233D; -fx-text-fill: #F5F1E9; -fx-border-color: transparent;
@@ -361,6 +374,13 @@
 }
 /* graphic-based cells (POS menu, open orders): child labels flip light when selected */
 .list-view .list-cell:filled:selected .label { -fx-text-fill: #F5F1E9; }
+
+/* POS menu grouping: category rows are gold signpost headers, not dimmed choices */
+.menu-group-header {
+    -fx-font-size: 10.5px; -fx-font-weight: bold; -fx-text-fill: #AD9F82;
+    -fx-padding: 8px 0 1px 0;
+}
+.list-view .list-cell:disabled { -fx-opacity: 1.0; }
 .list-view .list-cell:empty { -fx-background-color: transparent; }
 
 /* ---------- combo box ---------- */
@@ -369,6 +389,7 @@
     -fx-border-color: #E0DACC; -fx-border-width: 1.4px; -fx-border-radius: 10px;
     -fx-pref-height: 44px; -fx-cursor: hand;
 }
+.combo-box:hover { -fx-border-color: #C8B78C; -fx-background-color: #FFFFFF; }
 .combo-box:focused { -fx-border-color: #C29A3B; }
 .combo-box .list-cell { -fx-text-fill: #1B2A41; -fx-font-size: 14px; -fx-padding: 4px 10px; -fx-background-color: transparent; }
 .combo-box .arrow, .combo-box .arrow-button { -fx-background-color: transparent; }
@@ -467,7 +488,11 @@
     -fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #42526B;
     -fx-effect: dropshadow(gaussian, rgba(31,44,66,0.06), 12, 0, 0, 4);
 }
-.chip:hover { -fx-background-color: #FBF6EC; }
+.chip:hover {
+    -fx-background-color: #FBF6EC;
+    -fx-effect: dropshadow(gaussian, rgba(194,154,59,0.3), 14, 0, 0, 4);
+    -fx-text-fill: #16294A;
+}
 .chip.active { -fx-background-color: #12253F; -fx-text-fill: #F5F1E9; }
 .chip.active:hover { -fx-background-color: #12253F; }
 .chip-count {
@@ -487,7 +512,10 @@
     -fx-padding: 14px 18px; -fx-cursor: hand;
     -fx-effect: dropshadow(gaussian, rgba(31,44,66,0.07), 18, 0, 0, 6);
 }
-.row-card:hover { -fx-border-color: #E0D3B8; }
+.row-card:hover {
+    -fx-border-color: #D8B45C;
+    -fx-effect: dropshadow(gaussian, rgba(194,154,59,0.25), 22, 0, 0, 8);
+}
 .row-card.selected {
     -fx-border-color: #C29A3B;
     -fx-effect: dropshadow(gaussian, rgba(194,154,59,0.35), 22, 0, 0, 8);
@@ -526,7 +554,10 @@
     -fx-padding: 16px 18px; -fx-cursor: hand; -fx-min-width: 170px;
     -fx-effect: dropshadow(gaussian, rgba(31,44,66,0.07), 18, 0, 0, 6);
 }
-.floor-card:hover { -fx-border-color: #E0D3B8; }
+.floor-card:hover {
+    -fx-border-color: #D8B45C;
+    -fx-effect: dropshadow(gaussian, rgba(194,154,59,0.25), 22, 0, 0, 8);
+}
 .floor-card.selected {
     -fx-border-color: #C29A3B;
     -fx-effect: dropshadow(gaussian, rgba(194,154,59,0.35), 22, 0, 0, 8);

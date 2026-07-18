@@ -24,8 +24,8 @@ import java.util.List;
 public final class StockItemDAO {
 
     private static final String SELECT_BASE =
-        "SELECT stock_item_id, name, unit_of_measure, reorder_level, quantity_on_hand, status "
-        + "FROM stock_item";
+        "SELECT stock_item_id, name, unit_of_measure, reorder_level, quantity_on_hand, status, "
+        + "supplier_id FROM stock_item";
 
     private static final String SELECT_ALL = SELECT_BASE + " ORDER BY name";
 
@@ -39,12 +39,12 @@ public final class StockItemDAO {
         SELECT_BASE + " WHERE status = 'Active' AND quantity_on_hand <= reorder_level ORDER BY name";
 
     private static final String INSERT =
-        "INSERT INTO stock_item (name, unit_of_measure, reorder_level, quantity_on_hand, status) "
-        + "VALUES (?, ?, ?, ?, ?)";
+        "INSERT INTO stock_item (name, unit_of_measure, reorder_level, quantity_on_hand, status, "
+        + "supplier_id) VALUES (?, ?, ?, ?, ?, ?)";
 
     private static final String UPDATE =
-        "UPDATE stock_item SET name = ?, unit_of_measure = ?, reorder_level = ?, status = ? "
-        + "WHERE stock_item_id = ?";
+        "UPDATE stock_item SET name = ?, unit_of_measure = ?, reorder_level = ?, status = ?, "
+        + "supplier_id = ? WHERE stock_item_id = ?";
 
     private static final String UPDATE_STATUS =
         "UPDATE stock_item SET status = ? WHERE stock_item_id = ?";
@@ -107,6 +107,7 @@ public final class StockItemDAO {
             ps.setBigDecimal(3, item.getReorderLevel());
             ps.setBigDecimal(4, item.getQuantityOnHand());
             ps.setString(5, (item.getStatus() == null ? Status.ACTIVE : item.getStatus()).dbValue());
+            setNullableInt(ps, 6, item.getSupplierId());
             ps.executeUpdate();
             try (ResultSet keys = ps.getGeneratedKeys()) {
                 if (keys.next()) {
@@ -127,7 +128,8 @@ public final class StockItemDAO {
             ps.setString(2, item.getUnitOfMeasure());
             ps.setBigDecimal(3, item.getReorderLevel());
             ps.setString(4, (item.getStatus() == null ? Status.ACTIVE : item.getStatus()).dbValue());
-            ps.setInt(5, item.getStockItemId());
+            setNullableInt(ps, 5, item.getSupplierId());
+            ps.setInt(6, item.getStockItemId());
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new PersistenceException("Could not update the stock item.", e);
@@ -180,6 +182,16 @@ public final class StockItemDAO {
         item.setReorderLevel(rs.getBigDecimal("reorder_level"));
         item.setQuantityOnHand(rs.getBigDecimal("quantity_on_hand"));
         item.setStatus(Status.fromDb(rs.getString("status")));
+        int supplierId = rs.getInt("supplier_id");
+        item.setSupplierId(rs.wasNull() ? null : supplierId);
         return item;
+    }
+
+    private static void setNullableInt(PreparedStatement ps, int index, Integer value) throws SQLException {
+        if (value == null) {
+            ps.setNull(index, java.sql.Types.INTEGER);
+        } else {
+            ps.setInt(index, value);
+        }
     }
 }

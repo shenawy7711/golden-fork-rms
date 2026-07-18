@@ -4,6 +4,7 @@ import app.AppContext;
 import app.ContextAware;
 import app.Navigator;
 import domain.DiningTable;
+import domain.MenuCategory;
 import domain.MenuItem;
 import domain.Order;
 import domain.OrderItem;
@@ -61,7 +62,8 @@ public final class OrderController implements ContextAware {
     @FXML private VBox emptyState;
     @FXML private VBox orderPane;
     @FXML private Label orderHeader;
-    @FXML private ListView<MenuItem> itemsList;
+    /** Holds {@link MenuCategory} header rows and the {@link MenuItem}s beneath each. */
+    @FXML private ListView<Object> itemsList;
     @FXML private TextField quantityField;
     @FXML private Button addButton;
 
@@ -95,7 +97,7 @@ public final class OrderController implements ContextAware {
     private final ObservableList<OrderType> types = FXCollections.observableArrayList(OrderType.values());
     private final ObservableList<DiningTable> freeTables = FXCollections.observableArrayList();
     private final ObservableList<Order> openOrders = FXCollections.observableArrayList();
-    private final ObservableList<MenuItem> orderableItems = FXCollections.observableArrayList();
+    private final ObservableList<Object> orderableItems = FXCollections.observableArrayList();
     private final ObservableList<OrderItem> lines = FXCollections.observableArrayList();
     private final ObservableList<DiscountType> discountTypes =
         FXCollections.observableArrayList(DiscountType.values());
@@ -157,7 +159,7 @@ public final class OrderController implements ContextAware {
                 tableLabels.put(table.getTableId(), table.getLabel());
             }
             openOrders.setAll(context.orderService().listOpenOrders());
-            orderableItems.setAll(context.menuService().listOrderableItems());
+            orderableItems.setAll(groupByCategory(context.menuService().listOrderableItems()));
             methods.setAll(context.paymentMethodDAO().findActive());
             rebuildItemNames();
             if (!methods.isEmpty() && methodCombo.getValue() == null) {
@@ -251,12 +253,31 @@ public final class OrderController implements ContextAware {
 
     // --- lines ------------------------------------------------------------------
 
+    /** The dish list in menu order: each category as a header row, its dishes beneath it. */
+    private java.util.List<Object> groupByCategory(java.util.List<MenuItem> items) {
+        java.util.List<Object> rows = new java.util.ArrayList<>();
+        for (MenuCategory category : context.menuService().listCategories()) {
+            java.util.List<MenuItem> inCategory = new java.util.ArrayList<>();
+            for (MenuItem item : items) {
+                if (item.getCategoryId() == category.getCategoryId()) {
+                    inCategory.add(item);
+                }
+            }
+            if (!inCategory.isEmpty()) {
+                rows.add(category);
+                rows.addAll(inCategory);
+            }
+        }
+        return rows;
+    }
+
     private void addItem() {
-        MenuItem item = itemsList.getSelectionModel().getSelectedItem();
-        if (item == null) {
-            showMessage("Select an item to add.");
+        Object selected = itemsList.getSelectionModel().getSelectedItem();
+        if (!(selected instanceof MenuItem)) {
+            showMessage("Select a dish to add.");
             return;
         }
+        MenuItem item = (MenuItem) selected;
         run(() -> {
             int qty = parseQuantity(quantityField.getText());
             currentOrder = context.orderService().addLine(context.session(), currentOrder.getOrderId(),
@@ -403,24 +424,34 @@ public final class OrderController implements ContextAware {
         };
     }
 
-    /** Dish name on the left, price on the right — scannable like a printed menu. */
-    private javafx.scene.control.ListCell<MenuItem> itemCell() {
-        return new javafx.scene.control.ListCell<MenuItem>() {
-            @Override protected void updateItem(MenuItem i, boolean empty) {
-                super.updateItem(i, empty);
-                if (empty || i == null) {
+    /** Category rows render as gold headers; dishes show name left, price right like a menu. */
+    private javafx.scene.control.ListCell<Object> itemCell() {
+        return new javafx.scene.control.ListCell<Object>() {
+            @Override protected void updateItem(Object row, boolean empty) {
+                super.updateItem(row, empty);
+                setDisable(false);
+                if (empty || row == null) {
                     setGraphic(null);
                     setText(null);
                     return;
                 }
+                if (row instanceof MenuCategory) {
+                    Label header = new Label(((MenuCategory) row).getName().toUpperCase());
+                    header.getStyleClass().add("menu-group-header");
+                    setGraphic(header);
+                    setText(null);
+                    setDisable(true); // headers are signposts, not choices
+                    return;
+                }
+                MenuItem i = (MenuItem) row;
                 Label name = new Label(i.getName());
                 Region gap = new Region();
                 HBox.setHgrow(gap, Priority.ALWAYS);
                 Label price = new Label(money(i.getPrice()));
                 price.setStyle("-fx-font-weight: bold; -fx-text-fill: #9A742B;");
-                HBox row = new HBox(8, name, gap, price);
-                row.setAlignment(Pos.CENTER_LEFT);
-                setGraphic(row);
+                HBox line = new HBox(8, name, gap, price);
+                line.setAlignment(Pos.CENTER_LEFT);
+                setGraphic(line);
                 setText(null);
             }
         };

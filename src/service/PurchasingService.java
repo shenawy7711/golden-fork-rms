@@ -102,6 +102,17 @@ public final class PurchasingService {
         if (supplier.getStatus() != Status.ACTIVE) {
             throw new ValidationException("That supplier is inactive.");
         }
+        // A supplier sells their own catalogue: every line's item must be assigned to them.
+        for (PurchaseOrderItem line : lines) {
+            StockItem item = stockItemDAO.findById(line.getStockItemId());
+            if (item == null) {
+                throw new ValidationException("A line references a stock item that no longer exists.");
+            }
+            if (item.getSupplierId() == null || item.getSupplierId() != header.getSupplierId()) {
+                throw new ValidationException(item.getName() + " is not in " + supplier.getName()
+                    + "'s catalogue. Assign the item to this supplier in Inventory first.");
+            }
+        }
 
         return connections.inTransaction(connection -> {
             header.setPoNumber("PO" + String.format("%06d", purchaseOrderDAO.nextSequence(connection)));

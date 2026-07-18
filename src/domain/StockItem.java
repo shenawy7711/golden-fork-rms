@@ -15,6 +15,7 @@ public class StockItem {
     private BigDecimal reorderLevel;
     private BigDecimal quantityOnHand;
     private Status status;
+    private Integer supplierId;   // nullable — who supplies this item (purchasing catalogue)
 
     public int getStockItemId() { return stockItemId; }
     public void setStockItemId(int stockItemId) { this.stockItemId = stockItemId; }
@@ -33,4 +34,7 @@ public class StockItem {
 
     public Status getStatus() { return status; }
     public void setStatus(Status status) { this.status = status; }
+
+    public Integer getSupplierId() { return supplierId; }
+    public void setSupplierId(Integer supplierId) { this.supplierId = supplierId; }
 }

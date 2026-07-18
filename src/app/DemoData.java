@@ -93,13 +93,15 @@ public final class DemoData {
     // ---------- suppliers + staff ----------
 
     private static Supplier freshFarms;
+    private static Supplier nileFisheries;
     private static Supplier deltaMeats;
+    private static Supplier cairoGrocers;
 
     private static void seedSuppliersAndStaff(AppContext ctx, Session admin) {
         freshFarms = supplier(ctx, admin, "Fresh Farms Co", "Hany Mostafa", "01002214471", "orders@freshfarms.eg", "Obour wholesale market, Cairo");
-        supplier(ctx, admin, "Nile Fisheries", "Walid Samir", "01118904432", "sales@nilefisheries.eg", "Ataba fish market, Cairo");
+        nileFisheries = supplier(ctx, admin, "Nile Fisheries", "Walid Samir", "01118904432", "sales@nilefisheries.eg", "Ataba fish market, Cairo");
         deltaMeats = supplier(ctx, admin, "Delta Meats", "Omar Farouk", "01225558830", "supply@deltameats.eg", "Shubra, Cairo");
-        supplier(ctx, admin, "Cairo Grocers Ltd", "Nadia Kamel", "01099887712", "hello@cairogrocers.eg", "Downtown, Cairo");
+        cairoGrocers = supplier(ctx, admin, "Cairo Grocers Ltd", "Nadia Kamel", "01099887712", "hello@cairogrocers.eg", "Downtown, Cairo");
 
         staff(ctx, admin, "Ahmed Ali", "Head Cashier", "01012345601", "a.ali@goldenfork.eg");
         staff(ctx, admin, "Mona Hassan", "Restaurant Manager", "01012345602", "m.hassan@goldenfork.eg");
@@ -191,18 +193,18 @@ public final class DemoData {
     private static final Map<String, StockItem> STOCK = new HashMap<>();
 
     private static void seedInventory(AppContext ctx, Session admin) {
-        // name, unit, reorder, opening, adjustment (consumption already recorded today)
+        // name, unit, reorder, opening, adjustment (consumption already recorded today), supplier
         Object[][] items = {
-            {"Tomatoes", "kg", "5", "10", "-7"},        // 3.0 on hand -> LOW
-            {"Olive Oil", "L", "2", "3", "-2"},         // 1.0 on hand -> LOW
-            {"Sea Bass (whole)", "kg", "6", "14", "-2"},
-            {"Lamb (leg)", "kg", "5", "0", null},       // stocked via the received PO below
-            {"Chicken Breast", "kg", "8", "0", null},   // stocked via the received PO below
-            {"Basmati Rice", "kg", "10", "25", "-1"},
-            {"Lemons", "kg", "4", "6", "-1.5"},
-            {"Mint", "bunch", "10", "8", "-2"},         // 6.0 on hand -> LOW
-            {"Filo Pastry", "pack", "4", "9", null},
-            {"Baladi Bread", "dozen", "6", "12", "-3"},
+            {"Tomatoes", "kg", "5", "10", "-7", freshFarms},        // 3.0 on hand -> LOW
+            {"Olive Oil", "L", "2", "3", "-2", cairoGrocers},       // 1.0 on hand -> LOW
+            {"Sea Bass (whole)", "kg", "6", "14", "-2", nileFisheries},
+            {"Lamb (leg)", "kg", "5", "0", null, deltaMeats},       // stocked via the received PO below
+            {"Chicken Breast", "kg", "8", "0", null, deltaMeats},   // stocked via the received PO below
+            {"Basmati Rice", "kg", "10", "25", "-1", cairoGrocers},
+            {"Lemons", "kg", "4", "6", "-1.5", freshFarms},
+            {"Mint", "bunch", "10", "8", "-2", freshFarms},         // 6.0 on hand -> LOW
+            {"Filo Pastry", "pack", "4", "9", null, cairoGrocers},
+            {"Baladi Bread", "dozen", "6", "12", "-3", cairoGrocers},
         };
         for (Object[] row : items) {
             StockItem item = new StockItem();
@@ -211,6 +213,7 @@ public final class DemoData {
             item.setReorderLevel(new BigDecimal((String) row[2]));
             item.setQuantityOnHand(new BigDecimal((String) row[3]));
             item.setStatus(Status.ACTIVE);
+            item.setSupplierId(((Supplier) row[5]).getSupplierId());
             item = ctx.inventoryService().save(admin, item);
             STOCK.put(item.getName(), item);
             if (row[4] != null) {
@@ -245,7 +248,7 @@ public final class DemoData {
         ctx.purchasingService().createPO(admin, pending, java.util.Arrays.asList(
             poLine(STOCK.get("Tomatoes"), "20", "18"),
             poLine(STOCK.get("Lemons"), "10", "12"),
-            poLine(STOCK.get("Olive Oil"), "6", "210")));
+            poLine(STOCK.get("Mint"), "12", "8")));
         System.out.println("[seed] 1 received + 1 pending purchase order");
     }
 

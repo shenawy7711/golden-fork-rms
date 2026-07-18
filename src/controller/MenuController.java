@@ -145,8 +145,20 @@ public final class MenuController implements ContextAware {
     private void reloadItems() {
         MenuCategory filter = categoryTable.getSelectionModel().getSelectedItem();
         if (filter == null) {
-            items.setAll(context.menuService().listItems());
-            itemFilterLabel.setText("All categories");
+            // Menu order, not alphabetical soup: cluster items by category, then by name.
+            java.util.Map<Integer, Integer> position = new HashMap<>();
+            for (int i = 0; i < categories.size(); i++) {
+                position.put(categories.get(i).getCategoryId(), i);
+            }
+            java.util.List<MenuItem> all = context.menuService().listItems();
+            all.sort((a, b) -> {
+                int byCategory = Integer.compare(
+                    position.getOrDefault(a.getCategoryId(), Integer.MAX_VALUE),
+                    position.getOrDefault(b.getCategoryId(), Integer.MAX_VALUE));
+                return byCategory != 0 ? byCategory : a.getName().compareToIgnoreCase(b.getName());
+            });
+            items.setAll(all);
+            itemFilterLabel.setText("All categories · grouped");
         } else {
             items.setAll(context.menuService().listItemsInCategory(filter.getCategoryId()));
             itemFilterLabel.setText("In " + filter.getName());

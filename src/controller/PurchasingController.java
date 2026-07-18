@@ -66,6 +66,7 @@ public final class PurchasingController implements ContextAware {
 
     private final ObservableList<Supplier> suppliers = FXCollections.observableArrayList();
     private final ObservableList<StockItem> stockItems = FXCollections.observableArrayList();
+    private java.util.List<StockItem> activeItems = new java.util.ArrayList<>();
     private final ObservableList<PurchaseOrderItem> draftLines = FXCollections.observableArrayList();
     private final ObservableList<PurchaseOrder> orders = FXCollections.observableArrayList();
     private final ObservableList<ReceiveRow> receiveRows = FXCollections.observableArrayList();
@@ -114,11 +115,43 @@ public final class PurchasingController implements ContextAware {
         receiveTable.setEditable(true);
         receiveTable.setItems(receiveRows);
 
+        // A supplier sells their own catalogue: picking one narrows the item list to it,
+        // and switching mid-draft clears lines that belonged to the previous supplier.
+        supplierCombo.valueProperty().addListener((obs, old, chosen) -> {
+            if (old != null && chosen != null && old.getSupplierId() != chosen.getSupplierId()
+                && !draftLines.isEmpty()) {
+                draftLines.clear();
+                showMessage("Draft lines cleared — they belonged to " + old.getName() + ".");
+            }
+            refreshCatalogue(chosen);
+        });
+        lineItemCombo.setPromptText("Pick a supplier first…");
+        lineItemCombo.setDisable(true);
+        addLineButton.setDisable(true);
+
         addLineButton.setOnAction(e -> addDraftLine());
         removeDraftButton.setOnAction(e -> removeDraftLine());
         createPoButton.setOnAction(e -> createPo());
         receiveButton.setOnAction(e -> receiveDelivery());
         refreshButton.setOnAction(e -> reload());
+    }
+
+    /** Narrows the line-item combo to the chosen supplier's catalogue. */
+    private void refreshCatalogue(Supplier chosen) {
+        stockItems.clear();
+        lineItemCombo.setValue(null);
+        boolean none = chosen == null;
+        lineItemCombo.setDisable(none);
+        addLineButton.setDisable(none);
+        if (none) return;
+        for (StockItem item : activeItems) {
+            if (item.getSupplierId() != null && item.getSupplierId() == chosen.getSupplierId()) {
+                stockItems.add(item);
+            }
+        }
+        lineItemCombo.setPromptText(stockItems.isEmpty()
+            ? "No items assigned to " + chosen.getName()
+            : "Choose an item…");
     }
 
     @Override
@@ -130,7 +163,8 @@ public final class PurchasingController implements ContextAware {
     private void reload() {
         run(() -> {
             suppliers.setAll(context.supplierService().listActive());
-            stockItems.setAll(context.inventoryService().listActive());
+            activeItems = context.inventoryService().listActive();
+            refreshCatalogue(supplierCombo.getValue());
             supplierNames.clear();
             for (Supplier s : context.supplierService().listSuppliers()) {
                 supplierNames.put(s.getSupplierId(), s.getName());
